@@ -1,0 +1,1119 @@
+{
+  "format": 1,
+  "version": 12,
+  "rules": [
+    {
+      "id": "gmail",
+      "version": 2,
+      "name": "Gmail",
+      "mono": "Gm",
+      "group": "mail",
+      "hosts": ["mail.google.com"],
+      "multi": true,
+      "account": {
+        "field": "n",
+        "default": "0",
+        "addUrl": "https://accounts.google.com/AddSession?continue=https%3A%2F%2Fmail.google.com%2Fmail%2F"
+      },
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://accounts.google.com/ServiceLogin?service=mail&continue=https://mail.google.com/mail/u/{n}/"
+      },
+      "openUrl": "https://mail.google.com/mail/u/{n}/#inbox",
+      "requests": [
+        {
+          "key": "inbox",
+          "url": "https://mail.google.com/mail/u/{n}/feed/atom",
+          "parse": "text"
+        }
+      ],
+      "label": {
+        "from": "inbox",
+        "regex": "<title>[^<]*?([\\w.+-]+@[\\w.-]+)[^<]*</title>"
+      },
+      "map": {
+        "dm": {
+          "from": "inbox",
+          "xml": "fullcount"
+        }
+      }
+    },
+    {
+      "id": "x",
+      "version": 2,
+      "name": "X (Twitter)",
+      "mono": "X",
+      "group": "social",
+      "hosts": ["x.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://x.com/i/flow/login"
+      },
+      "openUrl": "https://x.com/notifications",
+      "requests": [
+        {
+          "key": "badge",
+          "url": "https://x.com/i/api/2/badge_count/badge_count.json?supports_ntab_urt=1",
+          "parse": "json",
+          "origin": "https://x.com",
+          "headers": {
+            "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+            "x-csrf-token": {
+              "cookie": "ct0"
+            },
+            "x-twitter-auth-type": "OAuth2Session",
+            "x-twitter-active-user": "yes"
+          }
+        },
+        {
+          "key": "me",
+          "url": "https://x.com/i/api/1.1/account/multi/list.json",
+          "parse": "json",
+          "origin": "https://x.com",
+          "headers": {
+            "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+            "x-csrf-token": {
+              "cookie": "ct0"
+            },
+            "x-twitter-auth-type": "OAuth2Session",
+            "x-twitter-active-user": "yes"
+          }
+        }
+      ],
+      "label": {
+        "from": "me",
+        "json": "users[0].screen_name"
+      },
+      "map": {
+        "dm": {
+          "from": "badge",
+          "json": "dm_unread_count",
+          "zero": true
+        },
+        "other": {
+          "from": "badge",
+          "json": "ntab_unread_count",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "linkedin",
+      "version": 1,
+      "name": "LinkedIn",
+      "mono": "in",
+      "group": "social",
+      "hosts": ["www.linkedin.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://www.linkedin.com/login"
+      },
+      "openUrl": "https://www.linkedin.com/notifications/",
+      "requests": [
+        {
+          "key": "badges",
+          "url": "https://www.linkedin.com/voyager/api/voyagerCommunicationsTabBadges?q=tabBadges&countFrom=0",
+          "parse": "json",
+          "origin": "https://www.linkedin.com",
+          "headers": {
+            "csrf-token": {
+              "cookie": "JSESSIONID",
+              "strip": true
+            },
+            "accept": "application/vnd.linkedin.normalized+json+2.1",
+            "x-restli-protocol-version": "2.0.0"
+          }
+        },
+        {
+          "key": "me",
+          "url": "https://www.linkedin.com/voyager/api/me",
+          "parse": "json",
+          "origin": "https://www.linkedin.com",
+          "headers": {
+            "csrf-token": {
+              "cookie": "JSESSIONID",
+              "strip": true
+            },
+            "accept": "application/json"
+          }
+        }
+      ],
+      "label": {
+        "from": "me",
+        "json": "miniProfile.publicIdentifier"
+      },
+      "map": {
+        "dm": {
+          "from": "badges",
+          "json": "data.elements[tab=MESSAGING].count",
+          "zero": true
+        },
+        "follow": {
+          "from": "badges",
+          "json": "data.elements[tab=MY_NETWORK].count",
+          "zero": true
+        },
+        "other": {
+          "from": "badges",
+          "json": "data.elements[tab=NOTIFICATIONS].count",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "instagram",
+      "version": 3,
+      "name": "Instagram",
+      "mono": "Ig",
+      "group": "social",
+      "hosts": ["www.instagram.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://www.instagram.com/accounts/login/",
+        "loggedOutIf": {
+          "redirectTo": "/accounts/login",
+          "missing": {
+            "from": "inbox",
+            "json": "counts"
+          }
+        }
+      },
+      "openUrl": "https://www.instagram.com/",
+      "requests": [
+        {
+          "key": "inbox",
+          "url": "https://www.instagram.com/api/v1/news/inbox/",
+          "parse": "json",
+          "origin": "https://www.instagram.com",
+          "headers": {
+            "x-ig-app-id": "936619743392459",
+            "x-csrftoken": {
+              "cookie": "csrftoken"
+            }
+          }
+        },
+        {
+          "key": "me",
+          "url": "https://www.instagram.com/api/v1/accounts/edit/web_form_data/",
+          "parse": "json",
+          "origin": "https://www.instagram.com",
+          "headers": {
+            "x-ig-app-id": "936619743392459",
+            "x-csrftoken": {
+              "cookie": "csrftoken"
+            }
+          }
+        },
+        {
+          "key": "home",
+          "url": "https://www.instagram.com/",
+          "parse": "text",
+          "reuse": 720
+        },
+        {
+          "key": "dm",
+          "url": "https://www.instagram.com/api/graphql",
+          "parse": "json",
+          "origin": "https://www.instagram.com",
+          "headers": {
+            "x-ig-app-id": "936619743392459",
+            "x-csrftoken": {
+              "cookie": "csrftoken"
+            },
+            "x-fb-lsd": {
+              "from": "home",
+              "regex": "\"LSD\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "x-fb-friendly-name": "IGDBadgeCountOffMsysQuery"
+          },
+          "form": {
+            "fb_dtsg": {
+              "from": "home",
+              "regex": "\"DTSGInitialData\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "lsd": {
+              "from": "home",
+              "regex": "\"LSD\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "fb_api_caller_class": "RelayModern",
+            "fb_api_req_friendly_name": "IGDBadgeCountOffMsysQuery",
+            "server_timestamps": "true",
+            "doc_id": "28939180542359933",
+            "variables": {
+              "uuid": true,
+              "template": "{\"device_id_for_iris_subscription\":\"{value}\",\"__relay_internal__pv__IGDMetaAIThreadingEnabledGKrelayprovider\":false}"
+            }
+          }
+        }
+      ],
+      "label": {
+        "from": "me",
+        "json": "form_data.username"
+      },
+      "map": {
+        "dm": {
+          "from": "dm",
+          "unreadChats": "data.get_slide_mailbox_for_iris_subscription"
+        },
+        "reply": {
+          "from": "inbox",
+          "json": ["counts.comments", "counts.usertags", "counts.story_mentions", "counts.photos_of_you"],
+          "zero": true
+        },
+        "react": {
+          "from": "inbox",
+          "json": ["counts.likes", "counts.comment_likes"],
+          "zero": true
+        },
+        "follow": {
+          "from": "inbox",
+          "json": ["counts.relationships", "counts.requests"],
+          "zero": true
+        }
+      },
+      "errorIf": {
+        "from": "dm",
+        "json": "errors"
+      }
+    },
+    {
+      "id": "threads",
+      "version": 2,
+      "name": "Threads",
+      "mono": "Th",
+      "group": "social",
+      "hosts": ["www.threads.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://www.threads.com/login"
+      },
+      "openUrl": "https://www.threads.com/activity",
+      "requests": [
+        {
+          "key": "home",
+          "url": "https://www.threads.com/",
+          "parse": "text",
+          "reuse": 720
+        },
+        {
+          "key": "badge",
+          "url": "https://www.threads.com/graphql/query",
+          "parse": "json",
+          "origin": "https://www.threads.com",
+          "headers": {
+            "x-ig-app-id": "238260118697367",
+            "x-csrftoken": {
+              "cookie": "csrftoken"
+            },
+            "x-fb-lsd": {
+              "from": "home",
+              "regex": "\"LSD\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "x-fb-friendly-name": "BarcelonaNotificationBadgeContextQueryDirectQuery"
+          },
+          "form": {
+            "fb_dtsg": {
+              "from": "home",
+              "regex": "\"DTSGInitialData\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "lsd": {
+              "from": "home",
+              "regex": "\"LSD\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "fb_api_caller_class": "RelayModern",
+            "fb_api_req_friendly_name": "BarcelonaNotificationBadgeContextQueryDirectQuery",
+            "server_timestamps": "true",
+            "variables": {
+              "from": "home",
+              "regex": "\"device_id\":\"([0-9A-Fa-f-]{36})\"",
+              "template": "{\"deviceID\":\"{value}\"}"
+            },
+            "doc_id": "28611375835229448"
+          }
+        }
+      ],
+      "label": {
+        "from": "home",
+        "regex": "\"viewer\":\\{[^}]*?\"username\":\"([^\"]+)\""
+      },
+      "map": {
+        "other": {
+          "from": "badge",
+          "json": "data.xdt_text_app_notification_badge.total_count",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      },
+      "errorIf": {
+        "from": "badge",
+        "json": "errors"
+      }
+    },
+    {
+      "id": "devto",
+      "version": 2,
+      "name": "Dev.to",
+      "mono": "Dv",
+      "group": "dev",
+      "hosts": ["dev.to"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://dev.to/enter",
+        "loggedOutIf": {
+          "missing": {
+            "from": "session",
+            "json": "user"
+          }
+        }
+      },
+      "openUrl": "https://dev.to/notifications",
+      "requests": [
+        {
+          "key": "counts",
+          "url": "https://dev.to/notifications/counts",
+          "parse": "text"
+        },
+        {
+          "key": "session",
+          "url": "https://dev.to/async_info/base_data",
+          "parse": "json"
+        },
+        {
+          "key": "settings",
+          "url": "https://dev.to/settings",
+          "parse": "text"
+        }
+      ],
+      "label": {
+        "from": "settings",
+        "regex": "value=\"([^\"]+)\"[^>]*?name=\"user\\[username\\]\""
+      },
+      "map": {
+        "other": {
+          "from": "counts",
+          "regex": "^\\s*([0-9]+)\\s*$"
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "reddit",
+      "version": 1,
+      "name": "Reddit",
+      "mono": "Rd",
+      "group": "social",
+      "hosts": ["www.reddit.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://www.reddit.com/login/",
+        "loggedOutIf": {
+          "missing": {
+            "from": "me",
+            "json": "data.name"
+          }
+        }
+      },
+      "openUrl": "https://www.reddit.com/message/inbox/",
+      "requests": [
+        {
+          "key": "me",
+          "url": "https://www.reddit.com/api/me.json",
+          "parse": "json"
+        }
+      ],
+      "label": {
+        "from": "me",
+        "json": "data.name"
+      },
+      "map": {
+        "reply": {
+          "from": "me",
+          "json": "data.inbox_count",
+          "zero": true
+        }
+      }
+    },
+    {
+      "id": "medium",
+      "version": 1,
+      "name": "Medium",
+      "mono": "Md",
+      "group": "social",
+      "hosts": ["medium.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://medium.com/m/signin",
+        "loggedOutIf": {
+          "missing": {
+            "from": "gql",
+            "json": "[0].data.viewer.username"
+          }
+        }
+      },
+      "openUrl": "https://medium.com/me/notifications",
+      "requests": [
+        {
+          "key": "gql",
+          "url": "https://medium.com/_/graphql",
+          "parse": "json",
+          "origin": "https://medium.com",
+          "headers": {
+            "accept": "application/json"
+          },
+          "json": [
+            {
+              "operationName": "UnreadNotificationCount",
+              "variables": {},
+              "query": "query UnreadNotificationCount { viewer { username } notificationStatus { unreadNotificationCount } }"
+            }
+          ]
+        }
+      ],
+      "label": {
+        "from": "gql",
+        "json": "[0].data.viewer.username"
+      },
+      "map": {
+        "other": {
+          "from": "gql",
+          "json": "[0].data.notificationStatus.unreadNotificationCount",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "dailydev",
+      "version": 5,
+      "name": "daily.dev",
+      "mono": "dd",
+      "group": "dev",
+      "hosts": ["app.daily.dev", "api.daily.dev"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://app.daily.dev/",
+        "loggedOutIf": {
+          "missing": {
+            "from": "boot",
+            "json": "user.username"
+          }
+        }
+      },
+      "openUrl": "https://app.daily.dev/notifications",
+      "requests": [
+        {
+          "key": "boot",
+          "url": "https://api.daily.dev/boot",
+          "parse": "json",
+          "origin": "https://app.daily.dev",
+          "inject": true
+        }
+      ],
+      "label": {
+        "from": "boot",
+        "json": "user.username"
+      },
+      "map": {
+        "other": {
+          "from": "boot",
+          "json": "notifications.unreadNotificationsCount",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "pinterest",
+      "version": 2,
+      "name": "Pinterest",
+      "mono": "Pi",
+      "group": "social",
+      "hosts": ["pinterest.com", "*.pinterest.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://www.pinterest.com/login/",
+        "loggedOutIf": {
+          "missing": {
+            "from": "badge",
+            "json": "resource_response.data"
+          }
+        }
+      },
+      "openUrl": "https://www.pinterest.com/news_hub/",
+      "requests": [
+        {
+          "key": "badge",
+          "url": "https://www.pinterest.com/resource/NewsHubBadgeResource/get/?data=%7B%22options%22%3A%7B%7D%2C%22context%22%3A%7B%7D%7D",
+          "parse": "json",
+          "headers": {
+            "accept": "application/json",
+            "x-requested-with": "XMLHttpRequest",
+            "x-pinterest-pws-handler": "www/index.js"
+          }
+        },
+        {
+          "key": "me",
+          "url": "https://www.pinterest.com/resource/UserSettingsResource/get/?data=%7B%22options%22%3A%7B%7D%2C%22context%22%3A%7B%7D%7D",
+          "parse": "json",
+          "headers": {
+            "accept": "application/json",
+            "x-requested-with": "XMLHttpRequest",
+            "x-pinterest-pws-handler": "www/index.js"
+          }
+        }
+      ],
+      "label": {
+        "from": "me",
+        "json": "resource_response.data.username"
+      },
+      "map": {
+        "dm": {
+          "from": "badge",
+          "json": "resource_response.data.conversations_unseen_count",
+          "zero": true
+        },
+        "other": {
+          "from": "badge",
+          "json": "resource_response.data.news_hub_count",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "github",
+      "version": 1,
+      "name": "GitHub",
+      "mono": "Gh",
+      "group": "dev",
+      "hosts": ["github.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://github.com/login",
+        "loggedOutIf": {
+          "missing": {
+            "from": "indicator",
+            "json": "mode"
+          }
+        }
+      },
+      "openUrl": "https://github.com/notifications",
+      "requests": [
+        {
+          "key": "indicator",
+          "url": "https://github.com/notifications/indicator",
+          "headers": {
+            "accept": "application/json"
+          },
+          "parse": "json",
+          "acceptStatus": [404]
+        },
+        {
+          "key": "home",
+          "url": "https://github.com/",
+          "parse": "text"
+        }
+      ],
+      "label": {
+        "from": "home",
+        "regex": "<meta name=\"user-login\" content=\"([^\"]+)\""
+      },
+      "map": {
+        "other": {
+          "from": "indicator",
+          "json": "mode",
+          "isNot": "none"
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "gitlab",
+      "version": 1,
+      "name": "GitLab",
+      "mono": "Gl",
+      "group": "dev",
+      "hosts": ["gitlab.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://gitlab.com/users/sign_in",
+        "loggedOutIf": {
+          "missing": {
+            "from": "gql",
+            "json": "data.currentUser.username"
+          }
+        }
+      },
+      "openUrl": "https://gitlab.com/dashboard/todos",
+      "requests": [
+        {
+          "key": "gql",
+          "url": "https://gitlab.com/api/graphql",
+          "method": "POST",
+          "json": {
+            "query": "{ currentUser { username todos(state: pending) { count } } }"
+          },
+          "parse": "json"
+        }
+      ],
+      "label": {
+        "from": "gql",
+        "json": "data.currentUser.username"
+      },
+      "map": {
+        "other": {
+          "from": "gql",
+          "json": "data.currentUser.todos.count"
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "youtube",
+      "version": 1,
+      "name": "YouTube",
+      "mono": "Yt",
+      "group": "social",
+      "hosts": ["www.youtube.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://accounts.google.com/ServiceLogin?service=youtube&continue=https://www.youtube.com/",
+        "loggedOutIf": {
+          "equals": {
+            "from": "count",
+            "json": "responseContext.serviceTrackingParams[service=GFEEDBACK].params[key=logged_in].value",
+            "value": "0"
+          }
+        }
+      },
+      "openUrl": "https://www.youtube.com/",
+      "requests": [
+        {
+          "key": "count",
+          "url": "https://www.youtube.com/youtubei/v1/notification/get_unseen_count?prettyPrint=false",
+          "method": "POST",
+          "origin": "https://www.youtube.com",
+          "headers": {
+            "authorization": {
+              "sapisidhash": "https://www.youtube.com"
+            },
+            "x-origin": "https://www.youtube.com",
+            "x-youtube-client-name": "1",
+            "x-youtube-client-version": "2.20261101.00.00"
+          },
+          "json": {
+            "context": {
+              "client": {
+                "clientName": "WEB",
+                "clientVersion": "2.20261101.00.00"
+              }
+            }
+          },
+          "parse": "json"
+        },
+        {
+          "key": "menu",
+          "url": "https://www.youtube.com/youtubei/v1/account/account_menu?prettyPrint=false",
+          "method": "POST",
+          "origin": "https://www.youtube.com",
+          "headers": {
+            "authorization": {
+              "sapisidhash": "https://www.youtube.com"
+            },
+            "x-origin": "https://www.youtube.com",
+            "x-youtube-client-name": "1",
+            "x-youtube-client-version": "2.20261101.00.00"
+          },
+          "json": {
+            "context": {
+              "client": {
+                "clientName": "WEB",
+                "clientVersion": "2.20261101.00.00"
+              }
+            }
+          },
+          "parse": "text"
+        }
+      ],
+      "label": {
+        "from": "menu",
+        "regex": "\"accountName\":\\{\"simpleText\":\"([^\"]+)\""
+      },
+      "map": {
+        "other": {
+          "from": "count",
+          "json": "actions[0].updateNotificationsUnseenCountAction.unseenCount",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "yandexmail",
+      "version": 1,
+      "name": "Яндекс Почта",
+      "mono": "Я",
+      "group": "mail",
+      "hosts": ["mail.yandex.ru"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://passport.yandex.ru/auth?retpath=https%3A%2F%2Fmail.yandex.ru%2F",
+        "loggedOutIf": {
+          "missing": {
+            "from": "badge",
+            "json": "uid"
+          }
+        }
+      },
+      "openUrl": "https://mail.yandex.ru/",
+      "requests": [
+        {
+          "key": "badge",
+          "url": "https://mail.yandex.ru/web-api/models/liza1?_m=app-badge-counter",
+          "method": "POST",
+          "json": {
+            "models": [
+              {
+                "name": "app-badge-counter",
+                "params": {}
+              }
+            ]
+          },
+          "parse": "json"
+        },
+        {
+          "key": "home",
+          "url": "https://mail.yandex.ru/",
+          "parse": "text"
+        }
+      ],
+      "label": {
+        "from": "home",
+        "regex": "\"default_email\":\"([^\"]+)\""
+      },
+      "map": {
+        "dm": {
+          "from": "badge",
+          "json": "models[0].data.counters.unread"
+        }
+      }
+    },
+    {
+      "id": "habr",
+      "version": 1,
+      "name": "Хабр",
+      "mono": "Хб",
+      "group": "dev",
+      "hosts": ["habr.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://habr.com/ru/feed/"
+      },
+      "openUrl": "https://habr.com/ru/tracker/",
+      "requests": [
+        {
+          "key": "tracker",
+          "url": "https://habr.com/kek/v2/tracker/publications/?page=1",
+          "parse": "json"
+        },
+        {
+          "key": "me",
+          "url": "https://habr.com/kek/v2/me",
+          "parse": "json"
+        }
+      ],
+      "label": {
+        "from": "me",
+        "json": "alias"
+      },
+      "map": {
+        "reply": {
+          "from": "tracker",
+          "json": ["unreadCounters.publicationComments", "unreadCounters.mentions"],
+          "zero": true
+        },
+        "follow": {
+          "from": "tracker",
+          "json": "unreadCounters.subscribers",
+          "zero": true
+        },
+        "other": {
+          "from": "tracker",
+          "json": ["unreadCounters.system", "unreadCounters.applications"],
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "digest",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "twitch",
+      "version": 1,
+      "name": "Twitch",
+      "mono": "Tw",
+      "group": "social",
+      "hosts": ["www.twitch.tv", "gql.twitch.tv"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://www.twitch.tv/login",
+        "loggedOutIf": {
+          "missing": {
+            "from": "gql",
+            "json": "data.currentUser.login"
+          }
+        }
+      },
+      "openUrl": "https://www.twitch.tv/",
+      "requests": [
+        {
+          "key": "gql",
+          "url": "https://gql.twitch.tv/gql",
+          "method": "POST",
+          "headers": {
+            "client-id": "kimne78kx3ncx6brgo4mv6wki5h1ko",
+            "authorization": {
+              "cookie": "auth-token",
+              "template": "OAuth {value}"
+            }
+          },
+          "json": {
+            "query": "query { currentUser { login notifications { summary { unseenCount } } } }"
+          },
+          "parse": "json"
+        }
+      ],
+      "label": {
+        "from": "gql",
+        "json": "data.currentUser.login"
+      },
+      "map": {
+        "other": {
+          "from": "gql",
+          "json": "data.currentUser.notifications.summary.unseenCount",
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "notion",
+      "version": 1,
+      "name": "Notion",
+      "mono": "N",
+      "group": "other",
+      "hosts": ["app.notion.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://app.notion.com/login"
+      },
+      "openUrl": "https://app.notion.com/",
+      "requests": [
+        {
+          "key": "route",
+          "url": "https://app.notion.com/api/v3/getUserNotificationsInitial",
+          "method": "POST",
+          "json": {
+            "size": 1,
+            "isInboxV2": true,
+            "markNotificationsAsReceived": false
+          },
+          "parse": "json"
+        },
+        {
+          "key": "inbox",
+          "url": "https://app.notion.com/api/v3/getUserNotificationsInitial",
+          "method": "POST",
+          "headers": {
+            "x-notion-cell": {
+              "from": "route",
+              "regex": "\"x-notion-cell\":\"([^\"]+)\"",
+              "fallback": ""
+            }
+          },
+          "jsonFrom": {
+            "from": "route",
+            "json": "fanoutData[0].request",
+            "fallback": {
+              "size": 1,
+              "isInboxV2": true,
+              "markNotificationsAsReceived": false
+            }
+          },
+          "parse": "json"
+        },
+        {
+          "key": "me",
+          "url": "https://app.notion.com/api/v3/getUserAnalyticsSettings",
+          "method": "POST",
+          "json": {},
+          "parse": "json"
+        }
+      ],
+      "label": {
+        "from": "me",
+        "json": "user_email"
+      },
+      "map": {
+        "reply": {
+          "from": "inbox",
+          "json": ["results[0].unread.mentions", "results[1].unread.mentions", "results[2].unread.mentions", "results[3].unread.mentions", "results[4].unread.mentions"],
+          "zero": true
+        },
+        "other": {
+          "from": "inbox",
+          "json": ["results[0].unread.nonMentions", "results[1].unread.nonMentions", "results[2].unread.nonMentions", "results[3].unread.nonMentions", "results[4].unread.nonMentions", "results[0].unread.following", "results[1].unread.following", "results[2].unread.following", "results[3].unread.following", "results[4].unread.following"],
+          "zero": true
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "digest",
+          "sound": false
+        }
+      }
+    },
+    {
+      "id": "facebook",
+      "version": 1,
+      "name": "Facebook",
+      "mono": "Fb",
+      "group": "social",
+      "hosts": ["www.facebook.com"],
+      "multi": false,
+      "auth": {
+        "kind": "cookie",
+        "loginUrl": "https://www.facebook.com/login/",
+        "loggedOutIf": {
+          "missing": {
+            "from": "notif",
+            "json": "data.viewer.actor.id"
+          }
+        }
+      },
+      "openUrl": "https://www.facebook.com/notifications",
+      "requests": [
+        {
+          "key": "token",
+          "url": "https://www.facebook.com/ajax/dtsg/?__a=1",
+          "origin": "https://www.facebook.com",
+          "parse": "text",
+          "reuse": 720
+        },
+        {
+          "key": "notif",
+          "url": "https://www.facebook.com/api/graphql/",
+          "method": "POST",
+          "origin": "https://www.facebook.com",
+          "headers": {
+            "x-fb-friendly-name": "CometNotificationsDropdownQuery"
+          },
+          "form": {
+            "fb_dtsg": {
+              "from": "token",
+              "regex": "\"token\":\"([^\"]+)\""
+            },
+            "fb_api_caller_class": "RelayModern",
+            "fb_api_req_friendly_name": "CometNotificationsDropdownQuery",
+            "server_timestamps": "true",
+            "doc_id": "29257345437226429",
+            "variables": "{\"count\":1,\"environment\":\"MAIN_SURFACE\",\"scale\":1}"
+          },
+          "parse": "json"
+        }
+      ],
+      "label": {
+        "from": "notif",
+        "json": "data.viewer.actor.name"
+      },
+      "map": {
+        "other": {
+          "from": "notif",
+          "json": "data.viewer.notifications_unseen_count"
+        }
+      },
+      "defaults": {
+        "other": {
+          "mode": "now",
+          "sound": false
+        }
+      }
+    }
+  ]
+}

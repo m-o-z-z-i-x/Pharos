@@ -1,0 +1,4 @@
+{
+  // vue: component prop hints and go-to-file on ctrl+click
+  "recommendations": ["Vue.volar"]
+}

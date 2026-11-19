@@ -1,0 +1,20 @@
+{
+  // 2 spaces, lf and no final newline, as everywhere in the project
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "files.eol": "\n",
+  "files.insertFinalNewline": false,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "[json]": { "files.insertFinalNewline": true },
+
+  // suggestions appear on their own in .vue templates
+  "[vue]": {
+    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true }
+  },
+
+  // wxt build output only gets in the way of search and the explorer
+  "files.exclude": { ".wxt": true },
+  "search.exclude": { ".output": true, ".wxt": true, "package-lock.json": true }
+}

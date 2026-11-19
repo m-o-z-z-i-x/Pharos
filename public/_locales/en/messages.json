@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "Pharos",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Checks your accounts every few minutes and tells you where notifications arrived, with all tabs closed",
+    "description": "Short description, up to 132 characters"
+  },
+  "actionTitle": {
+    "message": "Pharos",
+    "description": "Tooltip of the toolbar button"
+  }
+}

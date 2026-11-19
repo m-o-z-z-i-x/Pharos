@@ -1,0 +1,9 @@
+# secrets
+.keys/
+
+# libraries
+node_modules/
+
+# build
+.output/
+.wxt/

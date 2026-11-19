@@ -1,0 +1,5 @@
+# line endings in the repository are always lf: on windows git with core.autocrlf warns on every file otherwise
+* text=auto eol=lf
+
+*.wav binary
+*.png binary
