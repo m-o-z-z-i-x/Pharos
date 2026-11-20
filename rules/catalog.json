@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "version": 12,
+  "version": 13,
   "rules": [
     {
       "id": "gmail",
@@ -518,15 +518,15 @@
     },
     {
       "id": "dailydev",
-      "version": 5,
+      "version": 6,
       "name": "daily.dev",
       "mono": "dd",
       "group": "dev",
-      "hosts": ["app.daily.dev", "api.daily.dev"],
+      "hosts": ["daily.dev", "api.daily.dev"],
       "multi": false,
       "auth": {
         "kind": "cookie",
-        "loginUrl": "https://app.daily.dev/",
+        "loginUrl": "https://daily.dev/",
         "loggedOutIf": {
           "missing": {
             "from": "boot",
@@ -534,13 +534,13 @@
           }
         }
       },
-      "openUrl": "https://app.daily.dev/notifications",
+      "openUrl": "https://daily.dev/notifications",
       "requests": [
         {
           "key": "boot",
           "url": "https://api.daily.dev/boot",
           "parse": "json",
-          "origin": "https://app.daily.dev",
+          "origin": "https://daily.dev",
           "inject": true
         }
       ],
@@ -814,7 +814,7 @@
     },
     {
       "id": "yandexmail",
-      "version": 1,
+      "version": 2,
       "name": "Яндекс Почта",
       "mono": "Я",
       "group": "mail",
@@ -847,14 +847,23 @@
           "parse": "json"
         },
         {
-          "key": "home",
-          "url": "https://mail.yandex.ru/",
-          "parse": "text"
+          "key": "settings",
+          "url": "https://mail.yandex.ru/web-api/models/liza1?_m=settings",
+          "method": "POST",
+          "json": {
+            "models": [
+              {
+                "name": "settings",
+                "params": {}
+              }
+            ]
+          },
+          "parse": "json"
         }
       ],
       "label": {
-        "from": "home",
-        "regex": "\"default_email\":\"([^\"]+)\""
+        "from": "settings",
+        "json": "models[0].data.default_email"
       },
       "map": {
         "dm": {
