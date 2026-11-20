@@ -3,7 +3,7 @@
 <!-- ----------------------------------------------------------------------- -->
 <!-- settings page: sections on the left, content on the right, side panels on top -->
 <!-- narrower than 720px the sections hide behind a burger button in a top bar and the panels take the whole screen -->
-<!-- #section opens a section, #connect=<id> and #login=<id> open the connect and sign-in panels at once -->
+<!-- #section opens a section, #connect=<id>, #login=<id> and #account=<id> open the connect, sign-in and account panels at once -->
 <!-- ----------------------------------------------------------------------- -->
 
 <script setup>
@@ -43,7 +43,7 @@
   const hashParam = (key) => (location.hash.startsWith(`#${key}=`) ? decodeURIComponent(location.hash.slice(key.length + 2)) : null);
 
   const fromHash = () => {
-    if (hashParam("connect") || hashParam("login")) return "accounts";
+    if (hashParam("connect") || hashParam("login") || hashParam("account")) return "accounts";
 
     return SECTIONS.some((entry) => entry.id === location.hash.slice(1)) ? location.hash.slice(1) : "general";
   };
@@ -112,6 +112,12 @@
 
       if (account) connecting.value = { service: app.serviceOf(account.serviceId), resume: accountId };
     }
+
+    const configureId = hashParam("account");
+
+    // the link is used once: a reload after closing the panel must not open it again
+    if (configureId) history.replaceState(null, "", "#accounts");
+    if (configureId && app.accounts.some((candidate) => candidate.id === configureId)) editing.value = configureId;
 
     browser.storage.onChanged.addListener(onStorage);
     window.addEventListener("keydown", onKey);
