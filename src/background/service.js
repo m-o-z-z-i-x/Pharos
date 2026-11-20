@@ -260,6 +260,11 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
 
       await store.putAccount(markSeen(account));
       await refreshBadge();
+    } else if (kind === "problem" && account) {
+      // a lost sign-in goes straight to signing in again, any other trouble to the settings of this account
+      const hash = account.state === "login" ? "login" : "account";
+
+      await browser.tabs.create({ url: browser.runtime.getURL(`options.html#${hash}=${encodeURIComponent(account.id)}`) });
     } else {
       await browser.runtime.openOptionsPage();
     }
