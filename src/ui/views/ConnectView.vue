@@ -40,6 +40,8 @@
   const needsForm = fields.some((field) => field.required);
   // the accounts the browser is signed in to, offered by their address instead of a number; null while searching
   const choices = ref(choiceField ? null : []);
+  // the site did not answer the search: the window says so instead of falling back to a bare number field
+  const choicesFailed = ref(false);
   // the access is checked first: the accounts can only be listed with it, and an allowed site skips the access screen
   const step = ref(props.resumeAccountId ? "login" : choiceField || !needsForm ? "checking" : "form");
   const accountId = ref(props.resumeAccountId);
@@ -96,15 +98,21 @@
   // METHODS
   // ---------------------------------------------------------------------------
   // while the search runs the question is already the choice, so the number field never flashes
-  const fieldLabel = (field) => (numbered(field) && (choices.value === null || picking.value) ? t("connect.pick") : t(`fields.${field.key}`));
+  const fieldLabel = (field) => (numbered(field) && (choices.value === null || picking.value || choicesFailed.value) ? t("connect.pick") : t(`fields.${field.key}`));
 
   // a mailbox the site has not opened yet is still offered: connecting it opens the sign-in page and finishes by itself
   const choiceNote = (choice) => (choice.connected ? t("connect.pickConnected") : choice.label ? "" : t("connect.pickClosed"));
 
   const loadChoices = async () => {
     choices.value = null;
-    const answer = await send("listAccounts", { serviceId: props.service.id });
+    choicesFailed.value = false;
 
+    // the first request after the browser starts often times out, so one failure is asked again at once
+    let answer = await send("listAccounts", { serviceId: props.service.id });
+
+    if (!answer?.ok) answer = await send("listAccounts", { serviceId: props.service.id });
+
+    choicesFailed.value = !answer?.ok;
     choices.value = answer?.accounts ?? [];
 
     const free = choices.value.find((choice) => !choice.connected && choice.label) ?? choices.value.find((choice) => !choice.connected);
@@ -226,6 +234,12 @@
           <label class="lbl" :for="`f-${field.key}`">{{ fieldLabel(field) }}</label>
           <p v-if="numbered(field) && choices === null" class="hint">{{ t("connect.pickSearching") }}</p>
 
+          <template v-else-if="numbered(field) && choicesFailed">
+            <p class="hint warnline">{{ t("connect.pickFailed", { name: service.name }) }}</p>
+
+            <div class="row2"><button class="btn sm ghost" type="button" data-act="refresh-accounts" @click="loadChoices">{{ t("connect.pickRefresh") }}</button></div>
+          </template>
+
           <template v-else-if="numbered(field) && picking">
             <div :id="`f-${field.key}`" class="pick" role="radiogroup">
               <button v-for="choice in choices" :key="choice.value" type="button" role="radio" class="pick-item" :aria-checked="String(input[field.key] === choice.value)" :disabled="choice.connected" @click="input[field.key] = choice.value">
@@ -249,7 +263,7 @@
           </template>
         </div>
 
-        <button v-if="!(choiceField && choices === null)" class="btn block" type="submit" data-act="next" :disabled="!formOk">{{ t("connect.next") }}</button>
+        <button v-if="!(choiceField && (choices === null || choicesFailed))" class="btn block" type="submit" data-act="next" :disabled="!formOk">{{ t("connect.next") }}</button>
       </form>
 
       <div v-else-if="step === 'perm'" class="center">

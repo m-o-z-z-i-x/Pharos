@@ -40,8 +40,10 @@ export function ruleDriver(rule) {
     /**
      * the accounts of this site signed in to in the browser, by their number (the n-th mailbox of google)
      * a number past the last one opens the first account again, so the search stops at a name already found
-     * an account added to the browser but never opened on the site refuses the request: its page is loaded once, as a tab would
+     * an account added to the browser but never opened on the site refuses the request: its page is loaded once, as a tab would.
+     * one that still refuses ends the list, since every number after it refuses too when the browser is signed out
      * @return [{ value, label }]; label is null when the site still refuses the account
+     * @throws the error of the first account when the site could not be asked at all
      */
     async listAccounts(ctx) {
       if (!rule.multi || !rule.account) return [];
@@ -56,6 +58,8 @@ export function ruleDriver(rule) {
         try {
           label = await nameOf(auth);
         } catch (thrown) {
+          // an empty list would read as "no accounts": a site that did not answer is reported instead
+          if (thrown?.kind !== "login" && !found.length) throw thrown;
           if (thrown?.kind !== "login") break;
 
           await ctx.http.text(fill(rule.openUrl, auth), { withCookies: true }).catch(() => "");
@@ -65,6 +69,8 @@ export function ruleDriver(rule) {
         if (label && found.some((item) => item.label === label)) break;
 
         found.push({ value: String(number), label: label || null });
+
+        if (!label) break;
       }
 
       return found;
