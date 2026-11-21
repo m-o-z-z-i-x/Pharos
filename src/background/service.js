@@ -143,7 +143,7 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
 
     const result = await exclusive(() => connect({ serviceId: pending.serviceId, input: pending.input, fromQueue: true }));
 
-    await notifier.show(buildConnectResult(driver.name, result), settingsSound());
+    await notifier.show(buildConnectResult(driver.name, result, pending.serviceId), settingsSound());
 
     return { ok: true, resumed: true, status: result.status };
   }
@@ -252,8 +252,18 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
 
     const { accounts } = await store.getAll();
     const account = accounts.find((candidate) => candidate.id === accountId);
+    const options = (hash) => browser.tabs.create({ url: browser.runtime.getURL(`options.html#${hash}`) });
 
-    if (kind === "acc" && account) {
+    if (kind === "login" && account) {
+      // the sign-in page opens at once and loginTick finishes the connect, as the button of the panel does
+      const result = await awaitLogin({ accountId: account.id });
+
+      if (result.status !== "waiting") await options(`login=${encodeURIComponent(account.id)}`);
+    } else if (kind === "account" && account) {
+      await options(`account=${encodeURIComponent(account.id)}`);
+    } else if (kind === "connect" && registry.get(accountId)) {
+      await options(`connect=${encodeURIComponent(accountId)}`);
+    } else if (kind === "acc" && account) {
       const driver = registry.get(account.serviceId);
 
       if (driver) await browser.tabs.create({ url: driver.openUrl(account) });
@@ -264,7 +274,7 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
       // a lost sign-in goes straight to signing in again, any other trouble to the settings of this account
       const hash = account.state === "login" ? "login" : "account";
 
-      await browser.tabs.create({ url: browser.runtime.getURL(`options.html#${hash}=${encodeURIComponent(account.id)}`) });
+      await options(`${hash}=${encodeURIComponent(account.id)}`);
     } else {
       await browser.runtime.openOptionsPage();
     }
@@ -380,8 +390,8 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
         const found = await driver.listAccounts(ctx);
 
         return { ok: true, accounts: found.map((item) => ({ ...item, connected: used.has(item.value) })) };
-      } catch {
-        return { ok: false, accounts: [] };
+      } catch (thrown) {
+        return { ok: false, accounts: [], error: thrown?.kind ?? "network" };
       }
     },
 

@@ -112,8 +112,9 @@ export default {
     pickRefresh: "Refresh the list",
     pickClosed: "Not opened in the browser yet: the sign-in page will open",
     pickUnknown: "Mailbox #{n}",
+    pickFailed: "{name} did not answer, so the mailboxes could not be listed. Check the connection and refresh the list",
     timeout: "Sign-in did not happen in time. Try again",
-    notify: { done: "{name} connected", doneSub: "Open Pharos to see it", loginTitle: "Sign in to {name}", login: "Open Pharos and press Sign in again", failed: "Could not connect {name}" },
+    notify: { done: "{name} connected", doneSub: "Press here to open its settings", loginTitle: "Sign in to {name}", login: "Press here to open the sign-in page. Pharos finishes connecting once you sign in", failed: "Could not connect {name}", retry: "Press here to try again" },
 
     errors: {
       login: "The handle or password did not work. Check them and try again",
