@@ -24,10 +24,25 @@
   const { t } = useI18n();
   const app = appStore();
   const STATE = { ok: "good", pending: "warn", login: "warn", broken: "bad" };
+  const ORDER = ["messengers", "social", "mail", "dev", "other"];
 
   // COMPUTED
   // ---------------------------------------------------------------------------
-  const rows = computed(() => [...app.accounts].sort(byServiceName((account) => app.serviceOf(account.serviceId).name)).map((account) => ({ account, service: app.serviceOf(account.serviceId) })));
+  const count = computed(() => app.accounts.length);
+
+  // categories as in the catalog, services a to z inside, the accounts of one service together under it
+  const sections = computed(() => {
+    const sorted = [...app.accounts].sort(byServiceName((account) => app.serviceOf(account.serviceId).name));
+    const services = new Map();
+
+    for (const account of sorted) {
+      if (!services.has(account.serviceId)) services.set(account.serviceId, { service: app.serviceOf(account.serviceId), accounts: [] });
+
+      services.get(account.serviceId).accounts.push(account);
+    }
+
+    return ORDER.map((group) => ({ group, services: [...services.values()].filter((entry) => (entry.service.group ?? "other") === group) })).filter((section) => section.services.length);
+  });
 
   // METHODS
   // ---------------------------------------------------------------------------
@@ -37,25 +52,35 @@
 <!-- SEPARATOR ------------------------------------------------------------- -->
 
 <template>
-  <p v-if="rows.length" class="lead">{{ t("opt.accounts.lead", { n: rows.length }) }}</p>
+  <p v-if="count" class="lead">{{ t("opt.accounts.lead", { n: count }) }}</p>
 
   <div class="tblwrap">
     <table class="tbl">
       <thead><tr><th>{{ t("opt.accounts.service") }}</th><th>{{ t("opt.accounts.method") }}</th><th>{{ t("opt.accounts.interval") }}</th><th>{{ t("opt.accounts.last") }}</th><th>{{ t("opt.accounts.state") }}</th><th /></tr></thead>
 
-      <tbody>
-        <tr v-for="{ account, service } in rows" :key="account.id" class="acc-row">
-          <td><div class="svc"><ServiceLogo :service="service" size="sm" /><div><strong>{{ service.name }}</strong><small>{{ account.label }}</small></div></div></td>
-          <td><span class="meta"><span class="dot" :class="service.api ? 'api' : 'web'" />{{ t(`methods.${service.method}`) }}</span></td>
-          <td class="num">{{ t("account.minutes", { n: account.interval }) }}</td>
-          <td class="num">{{ hhmm(account.lastCheckAt) }}</td>
-          <td><span class="state" :class="STATE[account.state]">{{ t(`opt.accounts.${account.state}`) }}</span></td>
-          <td class="end"><button class="btn sm ghost" type="button" @click="emit('configure', account.id)">{{ t("opt.accounts.configure") }}</button></td>
-        </tr>
+      <tbody v-for="section in sections" :key="section.group">
+        <tr class="cat"><th colspan="6" scope="colgroup">{{ t(`groups.${section.group}`) }}</th></tr>
+
+        <template v-for="entry in section.services" :key="entry.service.id">
+          <tr v-if="entry.accounts.length > 1" class="grp"><td colspan="6"><div class="svc"><ServiceLogo :service="entry.service" size="sm" /><div><strong>{{ entry.service.name }}</strong><small>{{ t("list.accounts", { n: entry.accounts.length }, entry.accounts.length) }}</small></div></div></td></tr>
+
+          <tr v-for="account in entry.accounts" :key="account.id" class="acc-row" :class="{ nested: entry.accounts.length > 1 }">
+            <td>
+              <div v-if="entry.accounts.length > 1" class="svc"><div><strong>{{ account.label }}</strong></div></div>
+              <div v-else class="svc"><ServiceLogo :service="entry.service" size="sm" /><div><strong>{{ entry.service.name }}</strong><small>{{ account.label }}</small></div></div>
+            </td>
+
+            <td><span class="meta"><span class="dot" :class="entry.service.api ? 'api' : 'web'" />{{ t(`methods.${entry.service.method}`) }}</span></td>
+            <td class="num">{{ t("account.minutes", { n: account.interval }) }}</td>
+            <td class="num">{{ hhmm(account.lastCheckAt) }}</td>
+            <td><span class="state" :class="STATE[account.state]">{{ t(`opt.accounts.${account.state}`) }}</span></td>
+            <td class="end"><button class="btn sm ghost" type="button" @click="emit('configure', account.id)">{{ t("opt.accounts.configure") }}</button></td>
+          </tr>
+        </template>
       </tbody>
     </table>
 
-    <BaseEmpty v-if="!rows.length" bare icon="plus" :title="t('opt.accounts.empty')" :text="t('opt.accounts.none')" />
+    <BaseEmpty v-if="!count" bare icon="plus" :title="t('opt.accounts.empty')" :text="t('opt.accounts.none')" />
   </div>
 </template>
 
@@ -68,6 +93,26 @@
 
   .acc-row:hover {
     background: var(--hover);
+  }
+
+  .tbl .cat th {
+    padding: 12px 16px 8px;
+    font-size: .78rem;
+    color: var(--text);
+    background: var(--panel-dark);
+  }
+
+  .tbl .grp td {
+    padding-bottom: 4px;
+    border-top: 1px solid var(--line);
+  }
+
+  .tbl .nested td:first-child {
+    padding-left: 48px;
+  }
+
+  .tbl .nested td {
+    border-top: 0;
   }
 
   .svc {
@@ -99,6 +144,26 @@
 
     .tbl .acc-row:first-child {
       border-top: 0;
+    }
+
+    .tbl .cat,
+    .tbl .cat th,
+    .tbl .grp,
+    .tbl .grp td {
+      display: block;
+      width: 100%;
+    }
+
+    .tbl .grp td {
+      padding: 12px 16px 0;
+    }
+
+    .tbl .nested {
+      padding-left: 48px;
+    }
+
+    .tbl .nested td:first-child {
+      padding-left: 0;
     }
 
     .tbl .acc-row td {
