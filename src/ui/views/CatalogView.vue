@@ -1,7 +1,7 @@
 <!-- ----------------------------------------------------------------------- -->
 <!-- DESCRIPTION                                                             -->
 <!-- ----------------------------------------------------------------------- -->
-<!-- service catalog by groups with search; connected ones go to the end of the group -->
+<!-- service catalog by groups with search, each group from a to z -->
 <!-- events: back — go back, pick — a service is chosen (its description) -->
 <!-- usage: <CatalogView @back="close" @pick="startConnect" /> -->
 <!-- ----------------------------------------------------------------------- -->
@@ -13,6 +13,7 @@
   import { useI18n } from "@/i18n/vue.js";
   import { appStore } from "@/ui/stores/app.js";
   import { MAX_ACCOUNTS } from "@/core/model.js";
+  import { byName } from "@/ui/format.js";
   import BaseIcon from "@/ui/components/BaseIcon.vue";
   import ServiceLogo from "@/ui/components/ServiceLogo.vue";
   import BaseHint from "@/ui/components/BaseHint.vue";
@@ -54,7 +55,7 @@
       items: app.services
         .filter((service) => service.group === group && (!needle || service.name.toLowerCase().includes(needle)))
         .map((service) => ({ ...service, added: count(service) > 0, count: count(service) }))
-        .sort((first, second) => Number(first.added) - Number(second.added) || first.name.localeCompare(second.name)),
+        .sort((first, second) => byName(first.name, second.name)),
     })).filter((section) => section.items.length);
   });
 
@@ -64,9 +65,9 @@
     return !needle || service.name.toLowerCase().includes(needle) || service.id.includes(needle);
   };
 
-  const planned = computed(() => PLANNED.filter(matches));
+  const planned = computed(() => PLANNED.filter(matches).sort((first, second) => byName(first.name, second.name)));
 
-  const unavailable = computed(() => UNAVAILABLE.filter(matches));
+  const unavailable = computed(() => UNAVAILABLE.filter(matches).sort((first, second) => byName(first.name, second.name)));
 </script>
 
 <!-- SEPARATOR ------------------------------------------------------------- -->

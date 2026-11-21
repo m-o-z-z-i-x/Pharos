@@ -11,7 +11,7 @@
   import { useI18n } from "@/i18n/vue.js";
   import { appStore } from "@/ui/stores/app.js";
   import { send } from "@/messaging.js";
-  import { whenText } from "@/ui/format.js";
+  import { whenText, byName } from "@/ui/format.js";
   import { REPO_URL } from "@/ui/links.js";
   import BaseIcon from "@/ui/components/BaseIcon.vue";
   import ServiceLogo from "@/ui/components/ServiceLogo.vue";
@@ -33,7 +33,7 @@
   const loadRules = async () => {
     const response = await send("getRules");
 
-    rules.value = response?.rules ?? [];
+    rules.value = [...(response?.rules ?? [])].sort((first, second) => byName(first.name, second.name));
   }
 
   const reload = async () => {

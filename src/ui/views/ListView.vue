@@ -41,7 +41,7 @@
   const visible = computed(() => {
     const list = filter.value === "all" ? live.value : live.value.filter((account) => supports(account, filter.value, typesOf));
 
-    return groupByService(list);
+    return groupByService(list, (account) => app.serviceOf(account.serviceId).name);
   });
 
   const important = computed(() => loudTotal(live.value));
