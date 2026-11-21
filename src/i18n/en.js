@@ -143,6 +143,7 @@ export default {
     rule: "Rule",
     lastChecks: "Recent checks",
     noChecks: "No checks yet",
+    checkingNow: "Checking now…",
     logOk: "Checked, nothing new",
     logDelta: "Checked, +{n}",
     logError: { login: "Sign-in needed", rule: "Could not read the number", network: "The service did not answer" },

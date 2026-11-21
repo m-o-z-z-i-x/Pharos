@@ -143,6 +143,7 @@ export default {
     rule: "Правило",
     lastChecks: "Последние проверки",
     noChecks: "Проверок ещё не было",
+    checkingNow: "Идёт проверка…",
     logOk: "Проверено, нового нет",
     logDelta: "Проверено, +{n}",
     logError: { login: "Нужен вход", rule: "Не удалось прочитать число", network: "Сервис не ответил" },

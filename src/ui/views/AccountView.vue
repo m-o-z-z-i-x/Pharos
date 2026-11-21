@@ -35,6 +35,8 @@
   const app = appStore();
   const ICONS = { dm: "mail", reply: "reply", react: "heart", follow: "user", other: "bell" };
   const confirmRemove = ref(false);
+  // when the check pressed here started; null while none runs
+  const checkingSince = ref(null);
 
   // COMPUTED
   // ---------------------------------------------------------------------------
@@ -56,7 +58,17 @@
   const setMode = (type, mode) => app.act("setAccount", { id: props.accountId, patch: { prefs: { [type]: { mode } } } });
   const setSound = (type, sound) => app.act("setAccount", { id: props.accountId, patch: { prefs: { [type]: { sound } } } });
   const setCheckInterval = (minutes) => app.act("setAccount", { id: props.accountId, patch: { interval: Number(minutes) } });
-  const checkNow = () => app.act("checkNow", { accountId: props.accountId });
+  // a fast site answers at once: the running row stays a moment so the press is seen to do something
+  const checkNow = async () => {
+    if (checkingSince.value) return;
+
+    checkingSince.value = Date.now();
+
+    await Promise.all([app.act("checkNow", { accountId: props.accountId }), new Promise((resolve) => setTimeout(resolve, 600))]);
+
+    checkingSince.value = null;
+  }
+
   const report = () => browser.tabs.create({ url: reportUrl({ service: service.value, account: account.value, version: browser.runtime.getManifest().version }) });
 
   // the first press only asks to confirm, the second one disconnects
@@ -78,7 +90,7 @@
 
       <div class="grow"><h3>{{ service.name }}</h3><small>{{ account.label }}</small></div>
 
-      <button class="ib" type="button" :aria-label="t('list.checkNow')" :title="t('list.checkNow')" @click="checkNow"><BaseIcon name="refresh" /></button>
+      <button class="ib" :class="{ busy: checkingSince }" type="button" :aria-label="t('list.checkNow')" :title="t('list.checkNow')" :disabled="Boolean(checkingSince)" @click="checkNow"><BaseIcon name="refresh" /></button>
     </header>
 
     <div class="pb">
@@ -93,8 +105,9 @@
 
       <div class="lbl">{{ t("account.lastChecks") }}</div>
 
-      <ul v-if="account.log.length" class="facts log">
-        <li v-for="entry in account.log.slice(0, 3)" :key="entry.at"><span class="st" :class="entry.ok ? 'ok' : 'bad'"><BaseIcon :name="entry.ok ? 'check' : 'x'" /></span><span class="txt">{{ logText(entry) }}</span><time>{{ hhmm(entry.at) }}</time></li>
+      <ul v-if="account.log.length || checkingSince" class="facts log" aria-live="polite">
+        <li v-if="checkingSince" class="running"><span class="st"><BaseIcon name="refresh" /></span><span class="txt">{{ t("account.checkingNow") }}</span><time>{{ hhmm(checkingSince) }}</time></li>
+        <li v-for="entry in account.log.slice(0, checkingSince ? 2 : 3)" :key="entry.at"><span class="st" :class="entry.ok ? 'ok' : 'bad'"><BaseIcon :name="entry.ok ? 'check' : 'x'" /></span><span class="txt">{{ logText(entry) }}</span><time>{{ hhmm(entry.at) }}</time></li>
       </ul>
 
       <BaseEmpty v-else icon="refresh" :title="t('account.noChecks')" compact />
@@ -181,6 +194,15 @@
   .pair {
     display: flex;
     gap: 8px;
+  }
+
+  .busy :deep(.ic),
+  .running .st :deep(.ic) {
+    animation: spin 1s linear infinite;
+  }
+
+  .running .st {
+    color: var(--text);
   }
 
   .pair .btn {
