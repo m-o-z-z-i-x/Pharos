@@ -10,7 +10,7 @@
   import { computed, ref, watch } from "vue";
   import { useI18n } from "@/i18n/vue.js";
   import { appStore } from "@/ui/stores/app.js";
-  import { stamp, logText } from "@/ui/format.js";
+  import { stamp, logText, byServiceName } from "@/ui/format.js";
   import BaseIcon from "@/ui/components/BaseIcon.vue";
   import BaseSegmented from "@/ui/components/BaseSegmented.vue";
   import BaseEmpty from "@/ui/components/BaseEmpty.vue";
@@ -27,6 +27,7 @@
 
   // COMPUTED
   // ---------------------------------------------------------------------------
+  const sortedAccounts = computed(() => [...app.accounts].sort(byServiceName((account) => app.serviceOf(account.serviceId).name)));
   const all = computed(() =>
     app.accounts.flatMap((account) => account.log.map((entry) => ({ ...entry, name: app.serviceOf(account.serviceId).name, label: account.label, id: account.id }))),
   );
@@ -69,7 +70,7 @@
 
       <select v-model="service" class="in">
         <option value="all">{{ t("opt.log.allServices") }}</option>
-        <option v-for="account in app.accounts" :key="account.id" :value="account.id">{{ app.serviceOf(account.serviceId).name }} · {{ account.label }}</option>
+        <option v-for="account in sortedAccounts" :key="account.id" :value="account.id">{{ app.serviceOf(account.serviceId).name }} · {{ account.label }}</option>
       </select>
     </label>
 

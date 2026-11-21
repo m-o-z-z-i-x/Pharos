@@ -2,8 +2,21 @@
 // -----------------------------------------------------------------------------
 import { TYPES } from "@/core/model.js";
 import { t } from "@/i18n/vue.js";
+import { getLocale } from "@/i18n/index.js";
 
 // SEPARATOR -------------------------------------------------------------------
+
+/**
+ * alphabetical order in the language of the interface: case and accents do not matter, numbers go as numbers
+ * @return a negative number, zero or a positive one, as sort expects
+ */
+export const byName = (first, second) => String(first ?? "").localeCompare(String(second ?? ""), getLocale(), { sensitivity: "base", numeric: true });
+
+/**
+ * accounts by the name of their service, then by their own name
+ * @param nameOf - (account) => name of its service
+ */
+export const byServiceName = (nameOf) => (first, second) => byName(nameOf(first), nameOf(second)) || byName(first.label, second.label);
 
 const shown = (account, type) => (account.prefs[type].mode !== "off" ? account.counts[type] ?? 0 : 0);
 const fresh = (account, type) => Math.max(0, (account.counts[type] ?? 0) - (account.seen?.[type] ?? 0));
@@ -19,15 +32,15 @@ function rank(account) {
   return 2;
 }
 
-/** important first, then quiet news, then nothing new, then problems; stable inside a group */
 /**
  * the sorted accounts as rows: accounts of one service stand together as one group, placed where its first account is
+ * @param nameOf - (account) => name of its service, for the alphabetical order inside a rank
  * @return [{ serviceId, accounts }]
  */
-export function groupByService(accounts) {
+export function groupByService(accounts, nameOf = null) {
   const groups = new Map();
 
-  for (const account of sortAccounts(accounts)) {
+  for (const account of sortAccounts(accounts, nameOf)) {
     if (!groups.has(account.serviceId)) groups.set(account.serviceId, { serviceId: account.serviceId, accounts: [] });
 
     groups.get(account.serviceId).accounts.push(account);
@@ -36,8 +49,14 @@ export function groupByService(accounts) {
   return [...groups.values()];
 }
 
-export function sortAccounts(accounts) {
-  return accounts.map((account, index) => [account, index]).sort((first, second) => rank(first[0]) - rank(second[0]) || first[1] - second[1]).map(([account]) => account);
+/**
+ * important first, then quiet news, then nothing new, then problems; alphabetical inside a rank
+ * @param nameOf - (account) => name of its service; without it the order inside a rank stays as stored
+ */
+export function sortAccounts(accounts, nameOf = null) {
+  const inside = nameOf ? byServiceName(nameOf) : () => 0;
+
+  return accounts.map((account, index) => [account, index]).sort((first, second) => rank(first[0]) - rank(second[0]) || inside(first[0], second[0]) || first[1] - second[1]).map(([account]) => account);
 }
 
 /**

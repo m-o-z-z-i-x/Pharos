@@ -11,7 +11,7 @@
   import { computed } from "vue";
   import { useI18n } from "@/i18n/vue.js";
   import { appStore } from "@/ui/stores/app.js";
-  import { hhmm as fmtTime } from "@/ui/format.js";
+  import { hhmm as fmtTime, byServiceName } from "@/ui/format.js";
   import ServiceLogo from "@/ui/components/ServiceLogo.vue";
   import BaseEmpty from "@/ui/components/BaseEmpty.vue";
 
@@ -27,7 +27,7 @@
 
   // COMPUTED
   // ---------------------------------------------------------------------------
-  const rows = computed(() => app.accounts.map((account) => ({ account, service: app.serviceOf(account.serviceId) })));
+  const rows = computed(() => [...app.accounts].sort(byServiceName((account) => app.serviceOf(account.serviceId).name)).map((account) => ({ account, service: app.serviceOf(account.serviceId) })));
 
   // METHODS
   // ---------------------------------------------------------------------------
