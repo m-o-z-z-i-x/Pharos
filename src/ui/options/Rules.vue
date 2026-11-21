@@ -23,10 +23,14 @@
   const busy = ref(false);
   const rules = ref(null);
   const shown = ref(new Set());
+  const ORDER = ["messengers", "social", "mail", "dev", "other"];
 
   // COMPUTED
   // ---------------------------------------------------------------------------
   const catalog = computed(() => app.st?.catalog);
+
+  // categories as in the catalog, rules a to z inside (the list is sorted on load)
+  const sections = computed(() => ORDER.map((group) => ({ group, items: (rules.value ?? []).filter((rule) => (rule.group ?? "other") === group) })).filter((section) => section.items.length));
 
   // METHODS
   // ---------------------------------------------------------------------------
@@ -94,7 +98,10 @@
       <p v-if="!rules" class="hint">{{ t("opt.rules.loading") }}</p>
 
       <div v-else class="rules">
-        <details v-for="rule in rules" :key="rule.id" class="rule">
+        <template v-for="section in sections" :key="section.group">
+        <div class="cat">{{ t(`groups.${section.group}`) }}</div>
+
+        <details v-for="rule in section.items" :key="rule.id" class="rule">
           <summary>
             <ServiceLogo :service="{ id: rule.id, name: rule.name, mono: rule.mono }" size="sm" />
 
@@ -123,6 +130,7 @@
             </div>
           </div>
         </details>
+        </template>
       </div>
     </section>
   </div>
@@ -148,12 +156,20 @@
     overflow: hidden;
   }
 
-  .rule {
+  .cat {
+    padding: 12px 14px 8px;
     border-top: 1px solid var(--line);
+    background: var(--panel-dark);
+    color: var(--text);
+    font-size: .78rem;
   }
 
-  .rule:first-child {
+  .cat:first-child {
     border-top: 0;
+  }
+
+  .rule {
+    border-top: 1px solid var(--line);
   }
 
   .rule > summary {
