@@ -41,14 +41,19 @@ export function buildProblem(account, serviceName) {
   };
 }
 
-/** how a connect that finished without the popup went: the person is told in a notification */
-export function buildConnectResult(name, result) {
+/**
+ * how a connect that finished without the popup went: the person is told in a notification
+ * its id says where a click leads: the new account, its sign-in page, or the connect panel of the service again
+ */
+export function buildConnectResult(name, result, serviceId) {
   const ok = result.status === "ok";
-  const detail = result.status === "login-required" ? t("connect.notify.login") : t(`connect.errors.${result.error ?? "rule"}`);
+  const login = result.status === "login-required";
+  const detail = login ? t("connect.notify.login") : `${t(`connect.errors.${result.error ?? "rule"}`)}\n${t("connect.notify.retry")}`;
+  const id = ok && result.accountId ? `account:${result.accountId}` : login && result.accountId ? `login:${result.accountId}` : `connect:${serviceId}`;
 
   return {
-    id: `connect:${name}`,
-    title: ok ? t("connect.notify.done", { name }) : result.status === "login-required" ? t("connect.notify.loginTitle", { name }) : t("connect.notify.failed", { name }),
+    id,
+    title: ok ? t("connect.notify.done", { name }) : login ? t("connect.notify.loginTitle", { name }) : t("connect.notify.failed", { name }),
     message: ok ? t("connect.notify.doneSub") : detail,
     contextMessage: "",
     sound: false,
