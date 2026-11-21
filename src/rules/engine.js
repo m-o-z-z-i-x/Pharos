@@ -34,16 +34,23 @@ const toCount = (value) => {
 /**
  * a meta mailbox (instagram, threads) lists chats, not a number, so the count is made as the site makes its badge:
  * a chat is unread when it is marked so, or when it is not muted and the own read mark is older than its last activity
- * the mailbox id is the own participant id
+ * the mailbox id is the own participant id. a threads chat carries its unread flag and mute end itself
  * @return the number of unread chats, or null when the answer holds no mailbox
  */
-function unreadChats(mailbox) {
+function unreadChats(mailbox, now = Date.now()) {
   if (!mailbox || typeof mailbox !== "object" || !mailbox.threads_by_folder) return null;
 
   const self = String(mailbox.id);
-  const chats = (mailbox.threads_by_folder.edges ?? []).map((edge) => edge?.node?.as_ig_direct_thread ?? edge?.node).filter(Boolean);
+  const chats = (mailbox.threads_by_folder.edges ?? []).map((edge) => edge?.node?.as_ig_direct_thread ?? edge?.node?.as_micg_interface ?? edge?.node).filter(Boolean);
 
   return chats.filter((chat) => {
+    // 0 is not muted, a negative end is muted for good
+    if ("is_unread" in chat) {
+      const muteEnd = Number(chat.mute_until_ms ?? 0);
+
+      return Boolean(chat.is_unread) && !(muteEnd < 0 || muteEnd > now);
+    }
+
     if (chat.marked_as_unread) return true;
     if (chat.is_muted) return false;
 
