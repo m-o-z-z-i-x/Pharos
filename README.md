@@ -16,6 +16,7 @@ Browser extension for Chrome and Firefox that checks your accounts every few min
     <img height="50" src="https://i.imgur.com/4PobQqE.png" alt="Get Pharos for Firefox on Firefox Add-ons">
   </picture>
 </a>
+<br>
 
 > [!IMPORTANT]
 >
