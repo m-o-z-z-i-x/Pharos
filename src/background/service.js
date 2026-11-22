@@ -10,6 +10,7 @@ import { EXPORT_FORMAT } from "@/core/store.js";
 import { runDue } from "./runner.js";
 import { buildInstant, buildProblem, buildDigest, buildConnectResult, setBadge } from "./notify.js";
 import { DriverError } from "@/drivers/contract.js";
+import { t } from "@/i18n";
 
 // SEPARATOR -------------------------------------------------------------------
 
@@ -442,6 +443,32 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
       }
     },
 
+    // everything this browser keeps, as it lies in the storage; secrets never leave the background, so they and the
+    // cached catalog are shown by their size only
+    // the parts are shown one by one: every account apart, then each other key of the storage
+    storedData: async () => {
+      const raw = await browser.storage.local.get(null);
+      const bytes = (value) => new TextEncoder().encode(JSON.stringify(value ?? null)).length;
+      const hidden = (value) => { const length = JSON.stringify(value ?? "").length; return t("opt.privacy.hidden", { n: length }, length); };
+      const shown = (key, value) => {
+        if (key === "catalogCache" && value?.text) return { ...value, text: t("opt.privacy.catalogText", { kb: Math.ceil(value.text.length / 1024) }) };
+
+        return value;
+      };
+
+      const accounts = (raw.accounts ?? []).map((account) => ({
+        id: account.id,
+        serviceId: account.serviceId,
+        label: account.label,
+        bytes: bytes(account),
+        json: JSON.stringify({ ...account, auth: Object.fromEntries(Object.entries(account.auth ?? {}).map(([key, value]) => [key, hidden(value)])) }, null, 2),
+      }));
+
+      const parts = Object.keys(raw).filter((key) => key !== "accounts").sort().map((key) => ({ key, bytes: bytes(raw[key]), json: JSON.stringify(shown(key, raw[key]), null, 2) }));
+
+      return { ok: true, bytes: bytes(raw), accounts, parts };
+    },
+
     wipe: () => exclusive(async () => {
       const { accounts } = await store.getAll();
       const origins = [...new Set(accounts.flatMap(hostsOf))];
@@ -456,7 +483,7 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
   };
 
   // reading never moves the next wake
-  const READ_ONLY = new Set(["getState", "getRules", "exportSettings", "queueConnect", "dropQueued", "listAccounts"]);
+  const READ_ONLY = new Set(["getState", "getRules", "exportSettings", "storedData", "queueConnect", "dropQueued", "listAccounts"]);
 
   return {
     resumeConnect,
