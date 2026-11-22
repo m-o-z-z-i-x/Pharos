@@ -32,6 +32,7 @@ export default {
   },
 
   list: {
+    newGroup: "Новое",
     noImportant: "Важного нет",
     important: "{n} важное | {n} важных | {n} важных",
     problems: "{n} проблема | {n} проблемы | {n} проблем",
