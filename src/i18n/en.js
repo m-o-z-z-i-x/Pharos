@@ -184,7 +184,7 @@ export default {
 
     general: {
       interval: "Default check interval", intervalSub: "How often new services are checked. Each one can have its own",
-      quiet: "Quiet hours", quietSub: "No sound at this time, everything goes to the digest", on: "On", from: "from", to: "to",
+      quiet: "Quiet hours", quietSub: "Quiet mode turns on by itself at this time and off at its end: no sound, everything goes to the digest", on: "Turn on by schedule", from: "from", to: "to",
       look: "Appearance", lookSub: "Language of the window, notifications and settings, and the interface color", lang: "Language",
       theme: "Theme", dark: "Dark", light: "Light",
       backup: "Backup", backupSub: "Saves the list of connected services and all settings to a file: intervals, modes, sounds, quiet hours. Useful when moving to another browser or after reinstalling",
@@ -216,7 +216,7 @@ export default {
       lead: "A rule says where a service shows its notification count. Rules live in the open repository; the extension downloads them once a day and checks the signature",
       catalog: "Rule catalog", version: "Version {v}", verified: "signature verified", notVerified: "the last update was rejected: bad signature",
       bundled: "built-in", remote: "from the repository", checked: "Last check: {when}", never: "not checked yet", checkNow: "Check now",
-      own: "Your own rules", ownSub: "Rules for your own services arrive in the next version. You will be able to propose them to the shared catalog", propose: "Open the repository",
+      missing: "No service you need?", missingSub: "Rules are written for the services people ask for. Suggest one, or report a rule that stopped working: the form opens on GitHub with the versions already filled in", suggest: "Suggest a service", broken: "Report a breakage",
       list: "Rules in the catalog", listSub: "This is exactly what is downloaded from the repository. A rule is only a description: which pages of a site to open and where the number is. There is no code in it",
       hosts: "Sites", requests: "Requests", reads: "What is read", json: "Rule source", showJson: "Show source", hideJson: "Hide source", version: "version {v}",
       kinds: { dm: "direct", reply: "replies", react: "reactions", follow: "followers", other: "other" }, uses: "takes {what}", cookie: "cookie {name}", loading: "Loading the rules",

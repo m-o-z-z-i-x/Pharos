@@ -12,7 +12,8 @@
   import { appStore } from "@/ui/stores/app.js";
   import { send } from "@/messaging.js";
   import { whenText, byName } from "@/ui/format.js";
-  import { REPO_URL } from "@/ui/links.js";
+  import { browser } from "wxt/browser";
+  import { suggestUrl, breakageUrl } from "@/ui/links.js";
   import BaseIcon from "@/ui/components/BaseIcon.vue";
   import ServiceLogo from "@/ui/components/ServiceLogo.vue";
 
@@ -23,6 +24,7 @@
   const busy = ref(false);
   const rules = ref(null);
   const shown = ref(new Set());
+  const version = browser.runtime.getManifest().version;
   const ORDER = ["messengers", "social", "mail", "dev", "other"];
 
   // COMPUTED
@@ -89,8 +91,11 @@
       <div class="row2"><button class="btn ghost" type="button" :disabled="busy" @click="reload"><BaseIcon name="refresh" />{{ t("opt.rules.checkNow") }}</button></div>
     </section>
 
-    <section class="oc"><h3>{{ t("opt.rules.own") }}</h3><p>{{ t("opt.rules.ownSub") }}</p>
-      <div class="row2"><a class="btn ghost" :href="REPO_URL" target="_blank" rel="noopener">{{ t("opt.rules.propose") }}</a></div>
+    <section class="oc"><h3>{{ t("opt.rules.missing") }}</h3><p>{{ t("opt.rules.missingSub") }}</p>
+      <div class="row2">
+        <a class="btn ghost" :href="suggestUrl(version)" target="_blank" rel="noopener">{{ t("opt.rules.suggest") }}</a>
+        <a class="btn ghost" :href="breakageUrl(version)" target="_blank" rel="noopener">{{ t("opt.rules.broken") }}</a>
+      </div>
     </section>
 
     <section class="oc wide"><h3>{{ t("opt.rules.list") }}<span v-if="rules" class="n">{{ rules.length }}</span></h3>
