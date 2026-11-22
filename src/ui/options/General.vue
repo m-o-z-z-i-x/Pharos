@@ -93,7 +93,7 @@
 
     <section class="oc"><h3>{{ t("opt.general.quiet") }}<BaseHint :text="t('hint.quiet')" /></h3><p>{{ t("opt.general.quietSub") }}</p>
       <label class="row2"><input class="sw" type="checkbox" :checked="settings.quietHours.on" @change="set({ quietHours: { ...settings.quietHours, on: $event.target.checked } })">{{ t("opt.general.on") }}</label>
-      <div class="row2">{{ t("opt.general.from") }}<input class="in time" :value="settings.quietHours.from" maxlength="5" :aria-label="t('opt.general.from')" @change="setTime('from', $event.target.value)">{{ t("opt.general.to") }}<input class="in time" :value="settings.quietHours.to" maxlength="5" :aria-label="t('opt.general.to')" @change="setTime('to', $event.target.value)"></div>
+      <div class="row2" :class="{ off: !settings.quietHours.on }">{{ t("opt.general.from") }}<input class="in time" :value="settings.quietHours.from" maxlength="5" :disabled="!settings.quietHours.on" :aria-label="t('opt.general.from')" @change="setTime('from', $event.target.value)">{{ t("opt.general.to") }}<input class="in time" :value="settings.quietHours.to" maxlength="5" :disabled="!settings.quietHours.on" :aria-label="t('opt.general.to')" @change="setTime('to', $event.target.value)"></div>
     </section>
 
     <section class="oc"><h3>{{ t("opt.general.look") }}</h3>
@@ -147,5 +147,10 @@
 
   .bad {
     color: var(--bad);
+  }
+
+  /* the times wait for the schedule to be turned on */
+  .off {
+    opacity: .45;
   }
 </style>
