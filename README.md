@@ -17,6 +17,7 @@ Browser extension for Chrome and Firefox that checks your accounts every few min
   </picture>
 </a>
 <br>
+<br>
 
 > [!IMPORTANT]
 >
