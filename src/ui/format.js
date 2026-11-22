@@ -18,45 +18,39 @@ export const byName = (first, second) => String(first ?? "").localeCompare(Strin
  */
 export const byServiceName = (nameOf) => (first, second) => byName(nameOf(first), nameOf(second)) || byName(first.label, second.label);
 
-const shown = (account, type) => (account.prefs[type].mode !== "off" ? account.counts[type] ?? 0 : 0);
 const fresh = (account, type) => Math.max(0, (account.counts[type] ?? 0) - (account.seen?.[type] ?? 0));
 /** important and not yet marked read */
 const loud = (account) => TYPES.reduce((sum, type) => sum + (account.prefs[type].mode === "now" ? fresh(account, type) : 0), 0);
-const total = (account) => TYPES.reduce((sum, type) => sum + shown(account, type), 0);
 
-function rank(account) {
-  if (account.state === "login" || account.state === "broken") return 3;
-  if (loud(account)) return 0;
-  if (total(account)) return 1;
+/** news not yet marked read, in every type that is not switched off */
+const unread = (account) => TYPES.reduce((sum, type) => sum + (account.prefs[type].mode !== "off" ? fresh(account, type) : 0), 0);
 
-  return 2;
-}
+const CATEGORIES = ["messengers", "social", "mail", "dev", "other"];
 
 /**
- * the sorted accounts as rows: accounts of one service stand together as one group, placed where its first account is
- * @param nameOf - (account) => name of its service, for the alphabetical order inside a rank
- * @return [{ serviceId, accounts }]
+ * the popup list: a group "new" with the services that have unread news (important ones first), then the categories of the catalog
+ * accounts of one service stand together as one entry, services go a to z inside a group
+ * @param serviceOf - (id) => description of the service, with its name and group
+ * @return [{ key, entries: [{ serviceId, accounts }] }]; key is "new" or a category
  */
-export function groupByService(accounts, nameOf = null) {
-  const groups = new Map();
+export function groupForList(accounts, serviceOf) {
+  const nameOf = (account) => serviceOf(account.serviceId).name;
+  const services = new Map();
 
-  for (const account of sortAccounts(accounts, nameOf)) {
-    if (!groups.has(account.serviceId)) groups.set(account.serviceId, { serviceId: account.serviceId, accounts: [] });
+  for (const account of [...accounts].sort(byServiceName(nameOf))) {
+    if (!services.has(account.serviceId)) services.set(account.serviceId, { serviceId: account.serviceId, accounts: [] });
 
-    groups.get(account.serviceId).accounts.push(account);
+    services.get(account.serviceId).accounts.push(account);
   }
 
-  return [...groups.values()];
-}
+  const entries = [...services.values()];
+  const news = entries.filter((entry) => entry.accounts.some(unread));
+  const loudFirst = (first, second) => Number(second.accounts.some(loud)) - Number(first.accounts.some(loud));
+  const groups = [{ key: "new", entries: news.sort(loudFirst) }];
 
-/**
- * important first, then quiet news, then nothing new, then problems; alphabetical inside a rank
- * @param nameOf - (account) => name of its service; without it the order inside a rank stays as stored
- */
-export function sortAccounts(accounts, nameOf = null) {
-  const inside = nameOf ? byServiceName(nameOf) : () => 0;
+  for (const key of CATEGORIES) groups.push({ key, entries: entries.filter((entry) => !news.includes(entry) && (serviceOf(entry.serviceId).group ?? "other") === key) });
 
-  return accounts.map((account, index) => [account, index]).sort((first, second) => rank(first[0]) - rank(second[0]) || inside(first[0], second[0]) || first[1] - second[1]).map(([account]) => account);
+  return groups.filter((group) => group.entries.length);
 }
 
 /**

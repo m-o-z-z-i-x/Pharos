@@ -14,7 +14,7 @@
   import { browser } from "wxt/browser";
   import { appStore } from "@/ui/stores/app.js";
   import { hoursActive, hoursEnd } from "@/core/quiet.js";
-  import { groupByService, filterCounts, supports, loudTotal, clock } from "@/ui/format.js";
+  import { groupForList, filterCounts, supports, loudTotal, clock } from "@/ui/format.js";
   import AccountRow from "@/ui/components/AccountRow.vue";
   import AccountGroup from "@/ui/components/AccountGroup.vue";
   import BaseIcon from "@/ui/components/BaseIcon.vue";
@@ -41,7 +41,7 @@
   const visible = computed(() => {
     const list = filter.value === "all" ? live.value : live.value.filter((account) => supports(account, filter.value, typesOf));
 
-    return groupByService(list, (account) => app.serviceOf(account.serviceId).name);
+    return groupForList(list, app.serviceOf);
   });
 
   const important = computed(() => loudTotal(live.value));
@@ -121,11 +121,15 @@
         </div>
 
         <div v-if="visible.length" class="list">
-          <template v-for="entry in visible" :key="entry.serviceId">
-            <AccountGroup v-if="entry.accounts.length > 1" :accounts="entry.accounts" :service="app.serviceOf(entry.serviceId)" :now="app.now" @open="open" @read="read" @configure="emit('configure', $event)" />
+          <template v-for="section in visible" :key="section.key">
+            <div class="group-t" :class="{ fresh: section.key === 'new' }">{{ section.key === "new" ? t("list.newGroup") : t(`groups.${section.key}`) }}</div>
 
-            <template v-else>
-              <AccountRow v-for="account in entry.accounts" :key="account.id" :account="account" :service="app.serviceOf(account.serviceId)" :now="app.now" @open="open(account)" @read="read(account)" @configure="emit('configure', account.id)" />
+            <template v-for="entry in section.entries" :key="entry.serviceId">
+              <AccountGroup v-if="entry.accounts.length > 1" :accounts="entry.accounts" :service="app.serviceOf(entry.serviceId)" :now="app.now" @open="open" @read="read" @configure="emit('configure', $event)" />
+
+              <template v-else>
+                <AccountRow v-for="account in entry.accounts" :key="account.id" :account="account" :service="app.serviceOf(account.serviceId)" :now="app.now" @open="open(account)" @read="read(account)" @configure="emit('configure', account.id)" />
+              </template>
             </template>
           </template>
         </div>
@@ -208,6 +212,16 @@
   .hi {
     color: var(--hi);
     font-weight: 500;
+  }
+
+  .group-t {
+    padding: 8px 4px 0;
+    font-size: .78rem;
+    color: var(--text);
+  }
+
+  .group-t.fresh {
+    color: var(--amber);
   }
 
   .scan .ib :deep(.ic) {

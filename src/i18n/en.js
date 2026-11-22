@@ -33,6 +33,7 @@ export default {
 
   list: {
     noImportant: "Nothing important",
+    newGroup: "New",
     important: "{n} important | {n} important",
     problems: "{n} problem | {n} problems",
     accounts: "{n} account | {n} accounts",
