@@ -4,9 +4,9 @@
 </h1>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](./LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/m-o-z-z-i-x/Pharos?style=for-the-badge)](https://github.com/m-o-z-z-i-x/Pharos/releases)
 ![Last Commit](https://img.shields.io/github/last-commit/m-o-z-z-i-x/Pharos?v=1&style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/m-o-z-z-i-x/Pharos?v=1&style=for-the-badge)
-[![Firefox Add-on](https://img.shields.io/amo/v/pharos?style=for-the-badge&label=Firefox%20Add-on)](https://addons.mozilla.org/en-US/firefox/addon/pharos/)
 
 Browser extension for Chrome and Firefox that checks your accounts every few minutes and tells you where notifications arrived — with all service tabs closed
 
