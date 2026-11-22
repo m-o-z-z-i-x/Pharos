@@ -215,9 +215,18 @@
   }
 
   .group-t {
-    padding: 8px 4px 0;
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border-top: 1px solid var(--line);
+    background: var(--panel-dark);
     font-size: .78rem;
     color: var(--text);
+  }
+
+  .group-t:first-child {
+    border-top: 0;
   }
 
   .group-t.fresh {
