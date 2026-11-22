@@ -256,7 +256,7 @@ export default {
       q4: "Can my account get blocked", a4: "Not for services with an official API. For the rest the risk is low when checking no more than every 5 minutes. Requests go one at a time with pauses",
       q5: "A service says Not working", a5: "The site changed its notifications page. A rule is usually fixed within a day. Press Report a breakage to speed it up",
       q6: "How to move the settings", a6: "General, Backup. Tokens are not moved; in the new browser sign in to the services once",
-      q7: "Where is the source code", a7: "In the GitHub repository, MIT license. It is closed for now and will be opened soon. The rule catalog and a guide to adding your own service are there too",
+      q7: "Where is the source code", a7: "In the open GitHub repository, MIT license: the source code, the rule catalog with a description of how a rule works, and the issues for questions and service requests",
       q8: "Why there is no Discord", a8: "Discord shows the notification count only for a key to the whole account, not for your browser sign-in. That key can read and send messages on your behalf. Keeping it in the extension is unsafe, so Discord is not supported for now",
       author: "Author", authorSub: "Pharos is made by one person: design, code and the rules for services. The project is open and free, with no ads, analytics or server. New services arrive as their rules get written. Questions, ideas and breakage reports go to the repository issues", repo: "Extension repository", repoSub: "Source code, rules and issues",
     },
