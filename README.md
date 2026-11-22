@@ -6,8 +6,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](./LICENSE)
 ![Last Commit](https://img.shields.io/github/last-commit/m-o-z-z-i-x/Pharos?v=1&style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/m-o-z-z-i-x/Pharos?v=1&style=for-the-badge)
+[![Firefox Add-on](https://img.shields.io/amo/v/pharos?style=for-the-badge&label=Firefox%20Add-on)](https://addons.mozilla.org/en-US/firefox/addon/pharos/)
 
 Browser extension for Chrome and Firefox that checks your accounts every few minutes and tells you where notifications arrived — with all service tabs closed
+
+<a href="https://addons.mozilla.org/en-US/firefox/addon/pharos/">
+  <picture>
+    <source srcset="https://i.imgur.com/ZluoP7T.png">
+    <img height="50" src="https://i.imgur.com/4PobQqE.png" alt="Get Pharos for Firefox on Firefox Add-ons">
+  </picture>
+</a>
 
 > [!IMPORTANT]
 >
@@ -41,10 +49,12 @@ Browser extension for Chrome and Firefox that checks your accounts every few min
 
 ## 📦 Install
 
-The extension is not in the stores yet: Firefox Add-ons is next, the Chrome Web Store comes later. Until then it is installed from the source, see «Building from source» in the Develop section below
+- **Firefox** - Install it from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/pharos/): it works in Firefox 128 and newer, on a computer and on Android, and updates by itself
+- **Chrome** - The Chrome Web Store comes later. Until then it is installed from the source: build it as described in «Building from source» in the Develop section below, open `chrome://extensions`, turn on «Developer mode», press «Load unpacked» and pick `.output/chrome-mv3`
 
-- **Chrome** - Open `chrome://extensions`, turn on «Developer mode», press «Load unpacked» and pick `.output/chrome-mv3`
-- **Firefox** - Open `about:debugging#/runtime/this-firefox`, press «Load Temporary Add-on» and pick `manifest.json` in `.output/firefox-mv3`. Firefox removes a temporary add-on when it closes
+> [!TIP]
+>
+> Firefox can also load a build from the source: open `about:debugging#/runtime/this-firefox`, press «Load Temporary Add-on» and pick `manifest.json` in `.output/firefox-mv3`. Firefox removes a temporary add-on when it closes, so for everyday use take the store version
 
 ---
 
@@ -225,6 +235,7 @@ A check loads only what the counters need: the account name is read once, when c
 ## 🌟 Future Roadmap
 
 **Done**
+- [x] **Firefox Add-ons** - The extension passed the review and is published in the store
 - [x] **More services** - X (Twitter), LinkedIn, Instagram, Threads, Reddit, Pinterest, Medium, Dev.to, daily.dev, GitHub, GitLab, YouTube, Yandex Mail, Habr, Twitch, Notion, Facebook
 - [x] **Direct messages on Instagram** - Counted from the list of chats the way the site makes its badge
 
