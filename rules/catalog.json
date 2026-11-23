@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "version": 13,
+  "version": 14,
   "rules": [
     {
       "id": "gmail",
@@ -293,7 +293,7 @@
     },
     {
       "id": "threads",
-      "version": 2,
+      "version": 3,
       "name": "Threads",
       "mono": "Th",
       "group": "social",
@@ -330,7 +330,8 @@
           "form": {
             "fb_dtsg": {
               "from": "home",
-              "regex": "\"DTSGInitialData\",\\[\\],\\{\"token\":\"([^\"]+)\""
+              "regex": "\"DTSGInitialData\",\\[\\],\\{\"token\":\"([^\"]+)\"",
+              "onMissing": "login"
             },
             "lsd": {
               "from": "home",
