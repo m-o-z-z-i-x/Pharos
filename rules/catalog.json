@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "version": 14,
+  "version": 15,
   "rules": [
     {
       "id": "gmail",
@@ -293,7 +293,7 @@
     },
     {
       "id": "threads",
-      "version": 3,
+      "version": 4,
       "name": "Threads",
       "mono": "Th",
       "group": "social",
@@ -347,6 +347,42 @@
             },
             "doc_id": "28611375835229448"
           }
+        },
+        {
+          "key": "dm",
+          "url": "https://www.threads.com/api/graphql",
+          "parse": "json",
+          "origin": "https://www.threads.com",
+          "headers": {
+            "x-ig-app-id": "238260118697367",
+            "x-csrftoken": {
+              "cookie": "csrftoken"
+            },
+            "x-fb-lsd": {
+              "from": "home",
+              "regex": "\"LSD\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "x-fb-friendly-name": "useBarcelonaMessagesGetBadgeCountQuery"
+          },
+          "form": {
+            "fb_dtsg": {
+              "from": "home",
+              "regex": "\"DTSGInitialData\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "lsd": {
+              "from": "home",
+              "regex": "\"LSD\",\\[\\],\\{\"token\":\"([^\"]+)\""
+            },
+            "fb_api_caller_class": "RelayModern",
+            "fb_api_req_friendly_name": "useBarcelonaMessagesGetBadgeCountQuery",
+            "server_timestamps": "true",
+            "variables": {
+              "from": "home",
+              "regex": "\"device_id\":\"([0-9A-Fa-f-]{36})\"",
+              "template": "{\"device_id_for_iris_subscription\":\"{value}\",\"is_logged_in\":true,\"__relay_internal__pv__BarcelonaMessagesShouldIncludeNotificationSenderrelayprovider\":true}"
+            },
+            "doc_id": "41149076211357874"
+          }
         }
       ],
       "label": {
@@ -354,6 +390,10 @@
         "regex": "\"viewer\":\\{[^}]*?\"username\":\"([^\"]+)\""
       },
       "map": {
+        "dm": {
+          "from": "dm",
+          "unreadChats": "data.get_slide_mailbox_for_iris_subscription"
+        },
         "other": {
           "from": "badge",
           "json": "data.xdt_text_app_notification_badge.total_count",
