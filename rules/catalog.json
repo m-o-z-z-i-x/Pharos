@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "version": 14,
+  "version": 15,
   "rules": [
     {
       "id": "gmail",
@@ -293,7 +293,7 @@
     },
     {
       "id": "threads",
-      "version": 3,
+      "version": 4,
       "name": "Threads",
       "mono": "Th",
       "group": "social",
@@ -330,7 +330,8 @@
           "form": {
             "fb_dtsg": {
               "from": "home",
-              "regex": "\"DTSGInitialData\",\\[\\],\\{\"token\":\"([^\"]+)\""
+              "regex": "\"DTSGInitialData\",\\[\\],\\{\"token\":\"([^\"]+)\"",
+              "onMissing": "login"
             },
             "lsd": {
               "from": "home",
@@ -1100,7 +1101,7 @@
     },
     {
       "id": "facebook",
-      "version": 1,
+      "version": 2,
       "name": "Facebook",
       "mono": "Fb",
       "group": "social",
@@ -1145,6 +1146,27 @@
             "variables": "{\"count\":1,\"environment\":\"MAIN_SURFACE\",\"scale\":1}"
           },
           "parse": "json"
+        },
+        {
+          "key": "chat",
+          "url": "https://www.facebook.com/api/graphql/",
+          "method": "POST",
+          "origin": "https://www.facebook.com",
+          "headers": {
+            "x-fb-friendly-name": "MWChatBadgeCountQuery"
+          },
+          "form": {
+            "fb_dtsg": {
+              "from": "token",
+              "regex": "\"token\":\"([^\"]+)\""
+            },
+            "fb_api_caller_class": "RelayModern",
+            "fb_api_req_friendly_name": "MWChatBadgeCountQuery",
+            "server_timestamps": "true",
+            "doc_id": "28113210004940026",
+            "variables": "{\"suppress_xac_groups\":false}"
+          },
+          "parse": "json"
         }
       ],
       "label": {
@@ -1152,6 +1174,10 @@
         "json": "data.viewer.actor.name"
       },
       "map": {
+        "dm": {
+          "from": "chat",
+          "json": "data.viewer.message_threads.recent_unread_count_with_e2ee"
+        },
         "other": {
           "from": "notif",
           "json": "data.viewer.notifications_unseen_count"

@@ -39,10 +39,16 @@ export function createHttp({ fetch, browser, timeoutMs = 10_000 }) {
   }
 
   // headers a page can not set itself (cookie, origin) are set by a one-off session rule for this url only
-  async function withInjected(url, init, set) {
+  async function withInjected(url, init, wanted) {
+    // firefox refuses a header rule with an empty value: no cookies of the site means the request goes as it is
+    const set = wanted.filter(([, value]) => value);
+
+    if (!set.length) return send(url, init);
+
     const id = ++ruleSeq;
     const netRequest = browser.declarativeNetRequest;
-    const extensionId = browser.runtime?.id;
+    // the host of the extension's own pages: its id in chrome, a random uuid in firefox, where the id is no domain at all
+    const extensionId = browser.runtime?.getURL ? new URL(browser.runtime.getURL("/")).host : null;
 
     await netRequest.updateSessionRules({
       removeRuleIds: [id], // a rule left over from a stopped worker must not block this one

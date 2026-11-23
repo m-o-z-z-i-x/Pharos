@@ -151,6 +151,8 @@ async function resolve(spec, { url, account, bodies, http, kept, learned }) {
 
       // a value the site gives only sometimes falls back instead of failing the check
       if (!match && spec.fallback !== undefined) return spec.fallback;
+      // a page that hands the token only to a signed-in visitor: its absence means a lost sign-in, not a changed site
+      if (!match && spec.onMissing === "login") throw new DriverError("login", `no-token-${spec.from}`);
       if (!match) throw new DriverError("rule", `no-token-${spec.from}`);
 
       value = match[1] ?? match[0];

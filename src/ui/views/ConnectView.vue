@@ -43,7 +43,10 @@
   // the site did not answer the search: the window says so instead of falling back to a bare number field
   const choicesFailed = ref(false);
   // the access is checked first: the accounts can only be listed with it, and an allowed site skips the access screen
-  const step = ref(props.resumeAccountId ? "login" : choiceField || !needsForm ? "checking" : "form");
+  // an account whose sign-in page is already open waits for it rather than offering the same button again
+  const resumed = props.resumeAccountId ? app.accounts.find((account) => account.id === props.resumeAccountId) : null;
+  const signingIn = Boolean(resumed?.awaitingLogin && resumed.awaitingLogin.until > Date.now());
+  const step = ref(props.resumeAccountId ? (signingIn ? "waiting" : "login") : choiceField || !needsForm ? "checking" : "form");
   const accountId = ref(props.resumeAccountId);
   const error = ref("");
   const denied = ref(false);
@@ -62,6 +65,8 @@
   }));
   const stepIndex = computed(() => ({ form: 1, perm: 1, checking: 2, login: 2, waiting: 2, error: 2, done: 3 })[step.value]);
   const doneAccount = computed(() => app.accounts.find((account) => account.id === accountId.value));
+  // the sign-in happened and the account is being linked: its first check is running
+  const linking = computed(() => doneAccount.value?.state === "pending" && !doneAccount.value.awaitingLogin);
 
   // login and network are codes in both problem and connect.errors: connecting takes connect.errors
   const errorText = computed(() => {
@@ -86,14 +91,17 @@
       if (!account) { error.value = "duplicate"; step.value = "error"; return; }
 
       if (account.state === "ok") step.value = "done";
+      // signed in: the background links the account and runs its first check, which is no failure
+      else if (account.state === "pending") return;
       else if (!account.awaitingLogin) { error.value = account.error?.kind === "login" || !account.error ? t("connect.timeout") : account.error.kind; step.value = "error"; }
     },
   );
 
+  // the background looks for the sign-in only every half a minute: while this screen is open it is asked every few seconds
   watch(step, (value) => {
     clearInterval(poll);
-    if (value === "waiting") poll = setInterval(() => app.refresh(), 2000);
-  });
+    if (value === "waiting") poll = setInterval(() => app.act("loginTick"), 3000);
+  }, { immediate: true });
 
   // METHODS
   // ---------------------------------------------------------------------------
@@ -297,7 +305,7 @@
         <button class="btn block" type="button" @click="openLogin"><BaseIcon name="ext" />{{ t("connect.openLogin") }}</button>
       </div>
 
-      <div v-else-if="step === 'waiting'" class="center"><div class="spin" /><h4>{{ t("connect.waiting") }}</h4><p>{{ t("connect.waitingSub", { name: service.name }) }}</p></div>
+      <div v-else-if="step === 'waiting'" class="center" aria-live="polite"><div class="spin" /><h4>{{ linking ? t("connect.linking") : t("connect.waiting") }}</h4><p>{{ linking ? t("connect.linkingSub", { name: service.name }) : t("connect.waitingSub", { name: service.name }) }}</p></div>
 
       <div v-else-if="step === 'error'" class="center">
         <div class="big badc"><BaseIcon name="warn" /></div>

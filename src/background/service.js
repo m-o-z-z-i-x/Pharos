@@ -10,6 +10,7 @@ import { EXPORT_FORMAT } from "@/core/store.js";
 import { runDue } from "./runner.js";
 import { buildInstant, buildProblem, buildDigest, buildConnectResult, setBadge } from "./notify.js";
 import { DriverError } from "@/drivers/contract.js";
+import { t } from "@/i18n";
 
 // SEPARATOR -------------------------------------------------------------------
 
@@ -159,15 +160,32 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
     if (!driver) return { status: "error", error: "unknown-service" };
 
     const { settings } = await store.getAll();
+    const field = driver.fields?.[0];
+
+    // an account still waiting for its sign-in is this very connect, not a second account of the service
+    const placeholderOf = (accounts) => accounts.find((candidate) => candidate.serviceId === serviceId && candidate.state === "login" && candidate.label === driver.name && (!field || String(candidate.auth?.[field.key]) === String(input?.[field.key] ?? field.default ?? "")));
 
     try {
       const { auth, label } = await driver.connect(ctx, input ?? {});
       const { accounts } = await store.getAll();
+      const placeholder = placeholderOf(accounts);
+      const others = accounts.filter((candidate) => candidate !== placeholder);
       // a service with one account per browser can not get a second one, even when its name is unknown
-      const taken = driver.multi ? accounts.some((candidate) => sameIdentity(candidate, serviceId, label, driver)) : accounts.some((candidate) => candidate.serviceId === serviceId);
+      const taken = driver.multi ? others.some((candidate) => sameIdentity(candidate, serviceId, label, driver)) : others.some((candidate) => candidate.serviceId === serviceId);
 
       if (taken) return { status: "error", error: "duplicate", detail: label };
-      if (accounts.filter((candidate) => candidate.serviceId === serviceId).length >= MAX_ACCOUNTS) return { status: "error", error: "limit" };
+
+      // signed in on the site already: the waiting account is finished here instead of being reported as added twice
+      if (placeholder) {
+        await store.putAccount({ ...placeholder, auth, label, state: "pending", error: null, awaitingLogin: null, nextCheckAt: 0 });
+        await check([placeholder.id]);
+
+        if (placeholder.awaitingLogin?.tabId != null) await browser.tabs.remove(placeholder.awaitingLogin.tabId).catch(() => {});
+
+        return { status: "ok", accountId: placeholder.id };
+      }
+
+      if (others.filter((candidate) => candidate.serviceId === serviceId).length >= MAX_ACCOUNTS) return { status: "error", error: "limit" };
 
       const account = createAccount({ serviceId, label, auth, interval: settings.defaultInterval, defaults: driver.defaults });
 
@@ -180,7 +198,11 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
 
       if (failure.kind !== "login" || !driver.loginUrl) return { status: "error", error: failure.kind, detail: failure.detail };
 
-      const field = driver.fields?.[0];
+      // a second try while the first one still waits for the sign-in goes on with the same account
+      const waiting = placeholderOf((await store.getAll()).accounts);
+
+      if (waiting) return { status: "login-required", accountId: waiting.id };
+
       const auth = field ? { [field.key]: String(input?.[field.key] ?? field.default ?? "") } : {};
       const account = { ...createAccount({ serviceId, label: driver.name, auth, interval: settings.defaultInterval, defaults: driver.defaults }), state: "login", error: { kind: "login" } };
 
@@ -405,6 +427,8 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
     resumeConnect: (message) => resumeConnect(message),
     connect: (message) => exclusive(() => connect(message)),
     awaitLogin: (message) => exclusive(() => awaitLogin(message)),
+    // the window waiting for a sign-in asks for it every few seconds instead of the half-minute alarm
+    loginTick: () => exclusive(async () => { await loginTick(); return { ok: true }; }),
 
     markSeen: (message) => exclusive(async () => {
       const { accounts } = await store.getAll();
@@ -442,6 +466,32 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
       }
     },
 
+    // everything this browser keeps, as it lies in the storage; secrets never leave the background, so they and the
+    // cached catalog are shown by their size only
+    // the parts are shown one by one: every account apart, then each other key of the storage
+    storedData: async () => {
+      const raw = await browser.storage.local.get(null);
+      const bytes = (value) => new TextEncoder().encode(JSON.stringify(value ?? null)).length;
+      const hidden = (value) => { const length = JSON.stringify(value ?? "").length; return t("opt.privacy.hidden", { n: length }, length); };
+      const shown = (key, value) => {
+        if (key === "catalogCache" && value?.text) return { ...value, text: t("opt.privacy.catalogText", { kb: Math.ceil(value.text.length / 1024) }) };
+
+        return value;
+      };
+
+      const accounts = (raw.accounts ?? []).map((account) => ({
+        id: account.id,
+        serviceId: account.serviceId,
+        label: account.label,
+        bytes: bytes(account),
+        json: JSON.stringify({ ...account, auth: Object.fromEntries(Object.entries(account.auth ?? {}).map(([key, value]) => [key, hidden(value)])) }, null, 2),
+      }));
+
+      const parts = Object.keys(raw).filter((key) => key !== "accounts").sort().map((key) => ({ key, bytes: bytes(raw[key]), json: JSON.stringify(shown(key, raw[key]), null, 2) }));
+
+      return { ok: true, bytes: bytes(raw), accounts, parts };
+    },
+
     wipe: () => exclusive(async () => {
       const { accounts } = await store.getAll();
       const origins = [...new Set(accounts.flatMap(hostsOf))];
@@ -456,7 +506,7 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
   };
 
   // reading never moves the next wake
-  const READ_ONLY = new Set(["getState", "getRules", "exportSettings", "queueConnect", "dropQueued", "listAccounts"]);
+  const READ_ONLY = new Set(["getState", "getRules", "exportSettings", "storedData", "queueConnect", "dropQueued", "listAccounts"]);
 
   return {
     resumeConnect,

@@ -4,9 +4,9 @@
 </h1>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](./LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/m-o-z-z-i-x/Pharos?style=for-the-badge)](https://github.com/m-o-z-z-i-x/Pharos/releases)
 ![Last Commit](https://img.shields.io/github/last-commit/m-o-z-z-i-x/Pharos?v=1&style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/m-o-z-z-i-x/Pharos?v=1&style=for-the-badge)
-[![Firefox Add-on](https://img.shields.io/amo/v/pharos?style=for-the-badge&label=Firefox%20Add-on)](https://addons.mozilla.org/en-US/firefox/addon/pharos/)
 
 Browser extension for Chrome and Firefox that checks your accounts every few minutes and tells you where notifications arrived — with all service tabs closed
 
@@ -16,6 +16,8 @@ Browser extension for Chrome and Firefox that checks your accounts every few min
     <img height="50" src="https://i.imgur.com/4PobQqE.png" alt="Get Pharos for Firefox on Firefox Add-ons">
   </picture>
 </a>
+<br>
+<br>
 
 > [!IMPORTANT]
 >
@@ -49,12 +51,12 @@ Browser extension for Chrome and Firefox that checks your accounts every few min
 
 ## 📦 Install
 
-- **Firefox** - Install it from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/pharos/): it works in Firefox 128 and newer, on a computer and on Android, and updates by itself
-- **Chrome** - The Chrome Web Store comes later. Until then it is installed from the source: build it as described in «Building from source» in the Develop section below, open `chrome://extensions`, turn on «Developer mode», press «Load unpacked» and pick `.output/chrome-mv3`
+- **Firefox** - Install it from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/pharos/): it works in Firefox 128 and newer, on a computer and on Android, and updates by itself. The same signed `.xpi` file is attached to every [release](https://github.com/m-o-z-z-i-x/Pharos/releases/latest): open it in Firefox and confirm the installation
+- **Chrome** - The Chrome Web Store comes later. Until then take `Pharos-…-Chrome.zip` from the [latest release](https://github.com/m-o-z-z-i-x/Pharos/releases/latest), unpack it, open `chrome://extensions`, turn on «Developer mode», press «Load unpacked» and pick the unpacked folder. Chrome does not update such an extension by itself: for a newer version repeat these steps
 
 > [!TIP]
 >
-> Firefox can also load a build from the source: open `about:debugging#/runtime/this-firefox`, press «Load Temporary Add-on» and pick `manifest.json` in `.output/firefox-mv3`. Firefox removes a temporary add-on when it closes, so for everyday use take the store version
+> Both browsers can also load a build made from the source, see «Building from source» in the Develop section below. Chrome: «Load unpacked» and pick `.output/chrome-mv3`. Firefox: open `about:debugging#/runtime/this-firefox`, press «Load Temporary Add-on» and pick `manifest.json` in `.output/firefox-mv3`; Firefox removes a temporary add-on when it closes, so for everyday use take the store version or the signed `.xpi`
 
 ---
 
@@ -225,6 +227,7 @@ A rule is a description, not code: extension stores forbid loading code from a s
 | `loggedOutIf.redirectTo` | a redirect to the login page means a lost sign-in |
 | `loggedOutIf.equals` | a guest flag in the answer |
 | `loggedOutIf.bodyIncludes` | a text in the page; it also turns off the loading of only what the counters need |
+| `onMissing: "login"` | next to a token taken from a page: a page that gives the token only to a signed-in visitor, so its absence means a lost sign-in (Threads) |
 | `errorIf` | an error the site reports inside a normal answer, so it is never read as zero notifications |
 | `defaults` | the modes of the types that suit the service by default |
 
