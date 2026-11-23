@@ -160,15 +160,32 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
     if (!driver) return { status: "error", error: "unknown-service" };
 
     const { settings } = await store.getAll();
+    const field = driver.fields?.[0];
+
+    // an account still waiting for its sign-in is this very connect, not a second account of the service
+    const placeholderOf = (accounts) => accounts.find((candidate) => candidate.serviceId === serviceId && candidate.state === "login" && candidate.label === driver.name && (!field || String(candidate.auth?.[field.key]) === String(input?.[field.key] ?? field.default ?? "")));
 
     try {
       const { auth, label } = await driver.connect(ctx, input ?? {});
       const { accounts } = await store.getAll();
+      const placeholder = placeholderOf(accounts);
+      const others = accounts.filter((candidate) => candidate !== placeholder);
       // a service with one account per browser can not get a second one, even when its name is unknown
-      const taken = driver.multi ? accounts.some((candidate) => sameIdentity(candidate, serviceId, label, driver)) : accounts.some((candidate) => candidate.serviceId === serviceId);
+      const taken = driver.multi ? others.some((candidate) => sameIdentity(candidate, serviceId, label, driver)) : others.some((candidate) => candidate.serviceId === serviceId);
 
       if (taken) return { status: "error", error: "duplicate", detail: label };
-      if (accounts.filter((candidate) => candidate.serviceId === serviceId).length >= MAX_ACCOUNTS) return { status: "error", error: "limit" };
+
+      // signed in on the site already: the waiting account is finished here instead of being reported as added twice
+      if (placeholder) {
+        await store.putAccount({ ...placeholder, auth, label, state: "pending", error: null, awaitingLogin: null, nextCheckAt: 0 });
+        await check([placeholder.id]);
+
+        if (placeholder.awaitingLogin?.tabId != null) await browser.tabs.remove(placeholder.awaitingLogin.tabId).catch(() => {});
+
+        return { status: "ok", accountId: placeholder.id };
+      }
+
+      if (others.filter((candidate) => candidate.serviceId === serviceId).length >= MAX_ACCOUNTS) return { status: "error", error: "limit" };
 
       const account = createAccount({ serviceId, label, auth, interval: settings.defaultInterval, defaults: driver.defaults });
 
@@ -181,7 +198,11 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
 
       if (failure.kind !== "login" || !driver.loginUrl) return { status: "error", error: failure.kind, detail: failure.detail };
 
-      const field = driver.fields?.[0];
+      // a second try while the first one still waits for the sign-in goes on with the same account
+      const waiting = placeholderOf((await store.getAll()).accounts);
+
+      if (waiting) return { status: "login-required", accountId: waiting.id };
+
       const auth = field ? { [field.key]: String(input?.[field.key] ?? field.default ?? "") } : {};
       const account = { ...createAccount({ serviceId, label: driver.name, auth, interval: settings.defaultInterval, defaults: driver.defaults }), state: "login", error: { kind: "login" } };
 
@@ -406,6 +427,8 @@ export function createService({ browser, registry, store, ctx, now, sleep, notif
     resumeConnect: (message) => resumeConnect(message),
     connect: (message) => exclusive(() => connect(message)),
     awaitLogin: (message) => exclusive(() => awaitLogin(message)),
+    // the window waiting for a sign-in asks for it every few seconds instead of the half-minute alarm
+    loginTick: () => exclusive(async () => { await loginTick(); return { ok: true }; }),
 
     markSeen: (message) => exclusive(async () => {
       const { accounts } = await store.getAll();
