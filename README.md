@@ -241,11 +241,11 @@ A check loads only what the counters need: the account name is read once, when c
 - [x] **Firefox Add-ons** - The extension passed the review and is published in the store
 - [x] **More services** - X (Twitter), LinkedIn, Instagram, Threads, Reddit, Pinterest, Medium, Dev.to, daily.dev, GitHub, GitLab, YouTube, Yandex Mail, Habr, Twitch, Notion, Facebook
 - [x] **Direct messages on Instagram** - Counted from the list of chats the way the site makes its badge
+- [x] **Direct messages on Threads** - The same mailbox: unread chats that are not muted
 
 **Planned improvements**
 - [ ] **Even more services** - VK, Mail.ru, Outlook.com, Stack Overflow: their counters look reachable through the browser sign-in; the catalog shows them as in the works
-- [ ] **Direct messages on Threads** - The same mailbox, to be checked on an account with chats
-- [ ] **Direct messages on Facebook** - Messenger chats are end-to-end encrypted in the browser, so only notifications are counted for now
+- [ ] **Direct messages on Facebook** - The site has a counter of unread chats, but chats are end-to-end encrypted in the browser, so it still has to be tried on a real unread message; only notifications are counted for now
 - [ ] **Discord** - Its count needs a key to the whole account, which is unsafe to keep; the extension explains this in the catalog
 - [ ] **Telegram** - Its counters need a sign-in whose session key opens the whole account, which is unsafe to keep; the extension explains this in the catalog
 - [ ] **Own services** - Custom rules for plain-HTML sites

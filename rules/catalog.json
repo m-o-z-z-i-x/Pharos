@@ -1101,7 +1101,7 @@
     },
     {
       "id": "facebook",
-      "version": 2,
+      "version": 1,
       "name": "Facebook",
       "mono": "Fb",
       "group": "social",
@@ -1146,27 +1146,6 @@
             "variables": "{\"count\":1,\"environment\":\"MAIN_SURFACE\",\"scale\":1}"
           },
           "parse": "json"
-        },
-        {
-          "key": "chat",
-          "url": "https://www.facebook.com/api/graphql/",
-          "method": "POST",
-          "origin": "https://www.facebook.com",
-          "headers": {
-            "x-fb-friendly-name": "MWChatBadgeCountQuery"
-          },
-          "form": {
-            "fb_dtsg": {
-              "from": "token",
-              "regex": "\"token\":\"([^\"]+)\""
-            },
-            "fb_api_caller_class": "RelayModern",
-            "fb_api_req_friendly_name": "MWChatBadgeCountQuery",
-            "server_timestamps": "true",
-            "doc_id": "28113210004940026",
-            "variables": "{\"suppress_xac_groups\":false}"
-          },
-          "parse": "json"
         }
       ],
       "label": {
@@ -1174,10 +1153,6 @@
         "json": "data.viewer.actor.name"
       },
       "map": {
-        "dm": {
-          "from": "chat",
-          "json": "data.viewer.message_threads.recent_unread_count_with_e2ee"
-        },
         "other": {
           "from": "notif",
           "json": "data.viewer.notifications_unseen_count"
