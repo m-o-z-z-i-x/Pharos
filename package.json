@@ -1,6 +1,6 @@
 {
   "name": "pharos-extension",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Pharos — browser extension that tells you where notifications arrived, without open tabs",
   "private": true,
   "type": "module",
