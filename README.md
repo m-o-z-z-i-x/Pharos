@@ -227,6 +227,7 @@ A rule is a description, not code: extension stores forbid loading code from a s
 | `loggedOutIf.redirectTo` | a redirect to the login page means a lost sign-in |
 | `loggedOutIf.equals` | a guest flag in the answer |
 | `loggedOutIf.bodyIncludes` | a text in the page; it also turns off the loading of only what the counters need |
+| `onMissing: "login"` | next to a token taken from a page: a page that gives the token only to a signed-in visitor, so its absence means a lost sign-in (Threads) |
 | `errorIf` | an error the site reports inside a normal answer, so it is never read as zero notifications |
 | `defaults` | the modes of the types that suit the service by default |
 
